@@ -325,21 +325,27 @@ struct BackgroundView: View {
     private func drawCloud(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, hPercent: Double, blur: Double, opacity: Double, color: Color) {
         guard opacity > 0.005 else { return }
         let w = wPercent / 100 * size.width, h = hPercent / 100 * size.height
-        let rect = CGRect(x: x / 100 * size.width - w / 2, y: y / 100 * size.height - h / 2, width: w, height: h)
+        let centerX = x / 100 * size.width, centerY = y / 100 * size.height
         context.opacity = opacity
         context.drawLayer { ctx in
             ctx.addFilter(.blur(radius: blur))
-            let center = CGPoint(x: rect.minX + rect.width * 0.46, y: rect.minY + rect.height * 0.58)
-            // The CSS radial is elliptical (closest-side of a non-square box); a circular
-            // approximation reads the same at this blur radius, so it isn't worth the extra
-            // draw-layer scale/unscale to reproduce the ellipse exactly.
-            ctx.fill(Path(ellipseIn: rect), with: .radialGradient(
+            // CSS `radial-gradient(closest-side at 46% 58%, ...)`: an off-center ellipse
+            // whose radius in each axis is the distance from that center to the *nearer*
+            // edge on that axis — not a circle of radius max(w,h)/2, which stretched thin,
+            // wide clouds (h far smaller than w) into flat bars instead of tapered ovals.
+            // Built like the specular column: scale the space so a unit circle becomes
+            // the right ellipse, centered at the gradient's actual (off-center) point.
+            let offsetX = (0.46 - 0.5) * w, offsetY = (0.58 - 0.5) * h
+            let radiusX = w / 2 - abs(offsetX), radiusY = h / 2 - abs(offsetY)
+            ctx.translateBy(x: centerX + offsetX, y: centerY + offsetY)
+            ctx.scaleBy(x: radiusX, y: radiusY)
+            ctx.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)), with: .radialGradient(
                 Gradient(stops: [
                     .init(color: color.opacity(0.9), location: 0),
                     .init(color: color.opacity(0.5), location: 0.48),
                     .init(color: color.opacity(0), location: 0.82),
                 ]),
-                center: center, startRadius: 0, endRadius: max(rect.width, rect.height) / 2
+                center: .zero, startRadius: 0, endRadius: 1
             ))
         }
         context.opacity = 1
