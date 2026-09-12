@@ -23,9 +23,28 @@ struct TimeWheelView: View {
 
     var body: some View {
         VStack(spacing: 6) {
-            Text(shiftedLabel)
-                .font(.system(.footnote, design: .monospaced))
-                .foregroundStyle(Theme.onSurfaceVariant)
+            HStack(spacing: 10) {
+                Text(shiftedLabel)
+                    .font(.system(.footnote, design: .monospaced))
+                    .foregroundStyle(Theme.onSurfaceVariant)
+
+                if offset != 0 {
+                    Button {
+                        // Reuses the same manual step-based easing as the drag-release
+                        // deceleration, not `withAnimation` — the Canvas ticks don't
+                        // interpolate through SwiftUI's animation system either way.
+                        decelerate(to: 0)
+                    } label: {
+                        Label("Now", systemImage: "arrow.counterclockwise")
+                            .labelStyle(.titleAndIcon)
+                            .font(.system(.footnote, design: .rounded).weight(.bold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(Theme.primary)
+                    .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: offset == 0)
 
             Canvas { context, size in
                 drawTicks(context: &context, size: size)

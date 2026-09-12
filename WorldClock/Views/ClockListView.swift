@@ -130,22 +130,26 @@ private struct ClockRow: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(entry.label)
-                            .font(.title3.weight(.semibold))
+                            .font(.system(.title3, design: .rounded).weight(.bold))
                             .foregroundStyle(Theme.onSurface)
                         Text(deltaLabel)
                             .font(.system(.caption, design: .monospaced))
                             .foregroundStyle(Theme.onSurfaceVariant)
                     }
                     Spacer()
-                    Text(timeString)
-                        .font(.system(size: 32, weight: .light))
-                        .monospacedDigit()
-                        .foregroundStyle(Theme.onSurface)
-                        // Digits roll like an odometer instead of cross-fading/snapping —
-                        // reads far more naturally for a clock face, especially while
-                        // scrubbing the wheel where the value changes continuously.
-                        .contentTransition(.numericText())
-                        .animation(.snappy(duration: 0.35), value: timeString)
+                    (
+                        Text(timeComponents.main)
+                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                        + Text(timeComponents.period.isEmpty ? "" : " " + timeComponents.period)
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                    )
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.onSurface)
+                    // Digits roll like an odometer instead of cross-fading/snapping —
+                    // reads far more naturally for a clock face, especially while
+                    // scrubbing the wheel where the value changes continuously.
+                    .contentTransition(.numericText())
+                    .animation(.snappy(duration: 0.35), value: timeComponents.main)
                 }
                 .contentShape(Rectangle())
             }
@@ -176,14 +180,15 @@ private struct ClockRow: View {
         .animation(wheelTransitionAnimation, value: isSelected)
     }
 
-    private var timeString: String {
+    /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
+    private var timeComponents: (main: String, period: String) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = entry.timeZone
         let comps = calendar.dateComponents([.hour, .minute], from: displayedDate)
         let hour = comps.hour ?? 0, minute = comps.minute ?? 0
-        if use24Hour { return String(format: "%02d:%02d", hour, minute) }
+        if use24Hour { return (String(format: "%02d:%02d", hour, minute), "") }
         let displayHour = hour % 12 == 0 ? 12 : hour % 12
-        return String(format: "%d:%02d %@", displayHour, minute, hour < 12 ? "AM" : "PM")
+        return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
     }
 
     private var deltaLabel: String {
