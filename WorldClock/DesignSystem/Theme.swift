@@ -1,22 +1,31 @@
 import SwiftUI
 
-/// Colors and constants pulled from the Stitch "Atmospheric Horizon" design-system spec
-/// generated for this app. Custom fonts (Geist, JetBrains Mono) are deliberately skipped —
-/// see the build plan — in favor of system SF Pro / .monospaced digit design.
+/// Colors and constants from the "Nocturne" design system (Claude Design handoff:
+/// `World Clock.dc.html` / `Sky.dc.html`). Custom typefaces (Inter) are deliberately
+/// skipped in favor of the system font — same call made for the earlier Geist/JetBrains
+/// Mono spec — since embedding fonts isn't worth it for a size/weight-driven hierarchy
+/// system fonts already express (weight capped at 500, tabular numerals for clock digits).
 enum Theme {
-    static let primary = Color(hex: 0xAAC7FF)      // scrubber needle, active states
-    static let secondary = Color(hex: 0xFFC07A)     // dawn/dusk/golden-hour accents
-    static let tertiary = Color(hex: 0x68D3FF)      // daylight status chips
+    static let ground = Color(hex: 0x161826)
 
-    static let background = Color(hex: 0x11131D)
-    static let surfaceContainer = Color(hex: 0x1D1F2A)
-    static let onSurface = Color(hex: 0xE1E1F1)
-    static let onSurfaceVariant = Color(hex: 0xC0C6D6)
+    static let text = Color(hex: 0xe9e9ed)
+    static let textBright = Color(hex: 0xf3f5fe)
+    static let textBrightest = Color(hex: 0xf5f4ff)
+
+    static let accent = Color(hex: 0x9184d9)     // center caret, selected row edge, glows
+    static let accentText = Color(hex: 0xb5abfc)  // accent-colored labels/icons on dark
+    static let accentLight = Color(hex: 0xc7c0fd)  // near-center wheel ticks
+
+    static let glass = Color(hex: 0x121221)         // collapsed row / bottom wheel base
+    static let glassExpanded = Color(hex: 0x10121e) // expanded row base
+
+    static var hairline: Color { text.opacity(0.13) }
 
     enum Radius {
-        static let card: CGFloat = 24   // rounded-xl
-        static let control: CGFloat = 16 // rounded-lg
-        static let tag: CGFloat = 8      // rounded (micro tags)
+        static let row: CGFloat = 14
+        static let bottomWheel: CGFloat = 16
+        static let badge: CGFloat = 5
+        static let pill: CGFloat = 999
     }
 
     enum Spacing {

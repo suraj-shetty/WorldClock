@@ -23,6 +23,20 @@ struct ClockListView: View {
             ZStack(alignment: .bottom) {
                 BackgroundView(hour: viewModel.activeAnchorHour(entries: entries, now: now))
 
+                // Top scrim so the header text stays legible over a bright sky.
+                LinearGradient(
+                    stops: [
+                        .init(color: Color(hex: 0x0e101b).opacity(0.82), location: 0),
+                        .init(color: Color(hex: 0x0e101b).opacity(0.55), location: 0.45),
+                        .init(color: Color(hex: 0x0e101b).opacity(0.18), location: 0.78),
+                        .init(color: .clear, location: 1),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 230)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .allowsHitTesting(false)
+
                 VStack(spacing: 0) {
                     header
 
@@ -35,7 +49,7 @@ struct ClockListView: View {
                     // disconnect. LazyVStack keeps List's other benefit — off-screen rows
                     // aren't instantiated — without its row-resize behavior.
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        LazyVStack(spacing: 10) {
                             ForEach(entries) { entry in
                                 ClockRow(entry: entry, now: now, use24Hour: use24Hour, viewModel: viewModel)
                                     // A swipe-to-delete action would install a horizontal drag
@@ -68,9 +82,11 @@ struct ClockListView: View {
                             anchorNow: now,
                             anchorTimeZone: .current,
                             use24Hour: use24Hour,
+                            style: .bottom,
                             offset: $viewModel.offset
                         )
                         .padding(.horizontal, Theme.Spacing.base)
+                        .padding(.top, 22)
                         .padding(.bottom, Theme.Spacing.base)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
@@ -87,22 +103,44 @@ struct ClockListView: View {
         }
     }
 
+    private var homeKicker: String {
+        let name = TimeZone.current.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? TimeZone.current.identifier
+        return "\(name.uppercased()) · YOUR TIME"
+    }
+
     private var header: some View {
-        HStack {
-            Text("World Clock")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(Theme.onSurface)
-            Spacer()
-            Button { showingSettings = true } label: {
-                Image(systemName: "gearshape")
+        HStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(homeKicker)
+                    .font(.system(size: 10, weight: .medium))
+                    .tracking(1.5)
+                    .foregroundStyle(Theme.text.opacity(0.62))
+                Text("World Clock")
+                    .font(.system(size: 29, weight: .medium))
+                    .tracking(-0.5)
+                    .foregroundStyle(Theme.text)
             }
-            Button { showingAddSheet = true } label: {
-                Image(systemName: "plus")
+            Spacer()
+            HStack(spacing: 10) {
+                headerButton(systemImage: "gearshape") { showingSettings = true }
+                headerButton(systemImage: "plus") { showingAddSheet = true }
             }
         }
-        .tint(Theme.primary)
         .padding(.horizontal, Theme.Spacing.base)
-        .padding(.top, Theme.Spacing.base)
+        .padding(.top, 62)
+        .padding(.bottom, 20)
+    }
+
+    private func headerButton(systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Theme.accentText)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(Theme.glass.opacity(0.5)))
+                .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 
     private func addEntry(identifier: String, label: String) {
@@ -121,30 +159,42 @@ private struct ClockRow: View {
     private var displayedDate: Date { now.addingTimeInterval(viewModel.offset) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+        VStack(alignment: .leading, spacing: 0) {
             Button {
                 withAnimation(wheelTransitionAnimation) {
                     viewModel.select(entry)
                 }
             } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(entry.label)
-                            .font(.system(.title3, design: .rounded).weight(.bold))
-                            .foregroundStyle(Theme.onSurface)
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: isSelected ? 4 : 3) {
+                        HStack(spacing: 7) {
+                            if isSelected {
+                                Circle()
+                                    .fill(Theme.accent)
+                                    .frame(width: 5, height: 5)
+                                    .shadow(color: Theme.accent.opacity(0.7), radius: 4)
+                            }
+                            Text(entry.label)
+                                .font(.system(size: 16, weight: .medium))
+                                .tracking(-0.19)
+                                .foregroundStyle(isSelected ? Theme.textBright : Theme.text)
+                                .lineLimit(1)
+                        }
                         Text(deltaLabel)
-                            .font(.system(.caption, design: .monospaced))
-                            .foregroundStyle(Theme.onSurfaceVariant)
+                            .font(.system(size: 11.5))
+                            .tracking(0.23)
+                            .foregroundStyle(Theme.text.opacity(isSelected ? 0.62 : 0.6))
+                            .monospacedDigit()
                     }
-                    Spacer()
+                    Spacer(minLength: 8)
                     (
                         Text(timeComponents.main)
-                            .font(.system(size: 34, weight: .heavy, design: .rounded))
+                            .font(.system(size: isSelected ? 41 : 33, weight: .medium))
                         + Text(timeComponents.period.isEmpty ? "" : " " + timeComponents.period)
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.system(size: isSelected ? 13 : 12, weight: .medium))
                     )
                     .monospacedDigit()
-                    .foregroundStyle(Theme.onSurface)
+                    .foregroundStyle(isSelected ? Theme.textBrightest : Theme.textBright)
                     // Digits roll like an odometer instead of cross-fading/snapping —
                     // reads far more naturally for a clock face, especially while
                     // scrubbing the wheel where the value changes continuously.
@@ -156,10 +206,27 @@ private struct ClockRow: View {
             .buttonStyle(.plain)
 
             if isSelected {
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: Theme.accent.opacity(0.55), location: 0.18),
+                                .init(color: Theme.accent.opacity(0.55), location: 0.82),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .leading, endPoint: .trailing
+                        )
+                    )
+                    .frame(height: 1)
+                    .padding(.top, 13)
+                    .padding(.bottom, 9)
+
                 TimeWheelView(
                     anchorNow: now,
                     anchorTimeZone: entry.timeZone,
                     use24Hour: use24Hour,
+                    style: .inline,
                     offset: $viewModel.offset
                 )
                 // Fades in/out in place rather than sliding or scaling — combined with
@@ -169,14 +236,21 @@ private struct ClockRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .padding(Theme.Spacing.md)
+        .padding(.horizontal, 15)
+        .padding(.top, isSelected ? 15 : 14)
+        .padding(.bottom, isSelected ? 11 : 14)
         .background(
-            RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
-                .fill(Theme.surfaceContainer.opacity(isSelected ? 0.85 : 0.6))
+            RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
+                .fill(isSelected ? Theme.glassExpanded.opacity(0.74) : Theme.glass.opacity(0.48))
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous)
+                .stroke(isSelected ? Theme.accent : Theme.text.opacity(0.13), lineWidth: 1)
+        )
+        .shadow(color: isSelected ? Theme.accent.opacity(0.18) : .clear, radius: 24)
         // Keeps the expanding/collapsing wheel confined to the card's rounded bounds
         // instead of momentarily poking past its corners mid-transition.
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous))
         .animation(wheelTransitionAnimation, value: isSelected)
     }
 
@@ -194,8 +268,11 @@ private struct ClockRow: View {
     private var deltaLabel: String {
         let deviceOffset = TimeZone.current.secondsFromGMT(for: displayedDate)
         let entryOffset = entry.timeZone.secondsFromGMT(for: displayedDate)
-        let diffHours = (entryOffset - deviceOffset) / 3600
-        if diffHours == 0 { return "Same time" }
-        return diffHours > 0 ? "+\(diffHours)h" : "\(diffHours)h"
+        let diffMinutes = (entryOffset - deviceOffset) / 60
+        if diffMinutes == 0 { return "Home" }
+        let sign = diffMinutes > 0 ? "+" : "\u{2212}"
+        let magnitude = abs(diffMinutes)
+        let hours = magnitude / 60, minutes = magnitude % 60
+        return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(minutes * 10 / 60)h"
     }
 }
