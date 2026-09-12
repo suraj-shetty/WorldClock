@@ -26,31 +26,35 @@ struct ClockListView: View {
                 VStack(spacing: 0) {
                     header
 
-                    List {
-                        ForEach(entries) { entry in
-                            ClockRow(entry: entry, now: now, use24Hour: use24Hour, viewModel: viewModel)
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                                // A swipe-to-delete action would install a horizontal drag
-                                // recognizer on the row that fights the wheel's own horizontal
-                                // drag when this row is expanded — long-press avoids the conflict.
-                                .contextMenu {
-                                    Button(role: .destructive) {
-                                        modelContext.delete(entry)
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
+                    // A plain ScrollView + VStack, not List: List is backed by UITableView,
+                    // which recomputes self-sizing row heights in its own layout pass outside
+                    // SwiftUI's animation transaction — no combination of .transition/.animation
+                    // on the row's content can make THAT smooth, which is why the row kept
+                    // visibly jumping no matter how the wheel's own appearance was animated.
+                    // Plain SwiftUI layout (VStack) has no such disconnect.
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            ForEach(entries) { entry in
+                                ClockRow(entry: entry, now: now, use24Hour: use24Hour, viewModel: viewModel)
+                                    // A swipe-to-delete action would install a horizontal drag
+                                    // recognizer on the row that fights the wheel's own horizontal
+                                    // drag when this row is expanded — long-press avoids the conflict.
+                                    .contextMenu {
+                                        Button(role: .destructive) {
+                                            modelContext.delete(entry)
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
                                     }
-                                }
+                            }
                         }
+                        .padding(.horizontal, Theme.Spacing.base)
+                        .padding(.vertical, 6)
                     }
-                    .scrollContentBackground(.hidden)
-                    .listStyle(.plain)
-                    // List's own UIScrollView pan recognizer competes with the inline
-                    // wheel's horizontal drag even with `.simultaneousGesture` — disabling
-                    // scroll while a row is selected removes that conflict. Only one row's
-                    // wheel is ever interactive at a time, so this doesn't block anything
-                    // the user would otherwise be doing.
+                    // The scroll view's own pan recognizer competes with the inline wheel's
+                    // horizontal drag even with `.simultaneousGesture` — disabling scroll
+                    // while a row is selected removes that conflict. Only one row's wheel is
+                    // ever interactive at a time, so this doesn't block anything else.
                     .scrollDisabled(viewModel.selectedEntryID != nil)
 
                     // Selecting a row wraps the mutation in `withAnimation` (see the
