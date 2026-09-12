@@ -26,14 +26,16 @@ struct ClockListView: View {
                 VStack(spacing: 0) {
                     header
 
-                    // A plain ScrollView + VStack, not List: List is backed by UITableView,
-                    // which recomputes self-sizing row heights in its own layout pass outside
-                    // SwiftUI's animation transaction — no combination of .transition/.animation
-                    // on the row's content can make THAT smooth, which is why the row kept
-                    // visibly jumping no matter how the wheel's own appearance was animated.
-                    // Plain SwiftUI layout (VStack) has no such disconnect.
+                    // A plain ScrollView + LazyVStack, not List: List is backed by
+                    // UITableView, which recomputes self-sizing row heights in its own
+                    // layout pass outside SwiftUI's animation transaction — no combination
+                    // of .transition/.animation on the row's content can make THAT smooth,
+                    // which is why the row kept visibly jumping no matter how the wheel's
+                    // own appearance was animated. Plain SwiftUI layout has no such
+                    // disconnect. LazyVStack keeps List's other benefit — off-screen rows
+                    // aren't instantiated — without its row-resize behavior.
                     ScrollView {
-                        VStack(spacing: 12) {
+                        LazyVStack(spacing: 12) {
                             ForEach(entries) { entry in
                                 ClockRow(entry: entry, now: now, use24Hour: use24Hour, viewModel: viewModel)
                                     // A swipe-to-delete action would install a horizontal drag
@@ -70,7 +72,7 @@ struct ClockListView: View {
                         )
                         .padding(.horizontal, Theme.Spacing.base)
                         .padding(.bottom, Theme.Spacing.base)
-                        .transition(.opacity)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
             }
@@ -168,6 +170,9 @@ private struct ClockRow: View {
             RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous)
                 .fill(Theme.surfaceContainer.opacity(isSelected ? 0.85 : 0.6))
         )
+        // Keeps the expanding/collapsing wheel confined to the card's rounded bounds
+        // instead of momentarily poking past its corners mid-transition.
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.card, style: .continuous))
         .animation(wheelTransitionAnimation, value: isSelected)
     }
 
