@@ -14,6 +14,12 @@ struct TimeWheelView: View {
     private let pixelsPerHour: CGFloat = 64
 
     @State private var dragStartOffset: TimeInterval?
+    // Drives the post-release deceleration by hand: the ticks are drawn directly
+    // from `offset` inside a Canvas, which doesn't participate in SwiftUI's
+    // `withAnimation` interpolation the way a Shape or `.offset()` modifier would
+    // — a plain `withAnimation { offset = target }` would just jump. Stepping the
+    // value ourselves guarantees every intermediate frame actually redraws.
+    @State private var decelerationTask: Task<Void, Never>?
 
     var body: some View {
         VStack(spacing: 6) {
@@ -46,10 +52,49 @@ struct TimeWheelView: View {
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                if dragStartOffset == nil { dragStartOffset = offset }
+                if dragStartOffset == nil {
+                    decelerationTask?.cancel()
+                    dragStartOffset = offset
+                }
                 offset = (dragStartOffset ?? 0) - Double(value.translation.width / pixelsPerHour) * 3600
             }
-            .onEnded { _ in dragStartOffset = nil }
+            .onEnded { value in
+                let startOffset = dragStartOffset ?? offset
+                let releaseOffset = offset
+                dragStartOffset = nil
+                // `predictedEndTranslation` is UIKit's own projection of where a natural
+                // deceleration would coast to given the gesture's exit velocity — exactly
+                // the "let go and it glides to a stop" target we want, with no manual
+                // velocity tracking needed. It's calibrated for large-scale content
+                // scrolling though, not a 64pt-per-hour wheel, so a fast flick can project
+                // a wildly large distance — clamp how far it's allowed to coast *beyond*
+                // where the finger actually let go.
+                let rawTarget = startOffset - Double(value.predictedEndTranslation.width / pixelsPerHour) * 3600
+                let maxGlide: TimeInterval = 6 * 3600
+                let clampedGlide = min(max(rawTarget - releaseOffset, -maxGlide), maxGlide)
+                decelerate(to: releaseOffset + clampedGlide)
+            }
+    }
+
+    /// Eases `offset` from its current value to `target` over a fixed duration by
+    /// manually stepping it several times a second (see the comment on
+    /// `decelerationTask` for why this can't just be a `withAnimation`).
+    private func decelerate(to target: TimeInterval) {
+        decelerationTask?.cancel()
+        let start = offset
+        guard start != target else { return }
+        let duration = 0.5
+        let steps = 30
+        decelerationTask = Task { @MainActor in
+            for i in 1...steps {
+                if Task.isCancelled { return }
+                try? await Task.sleep(nanoseconds: UInt64(duration / Double(steps) * 1_000_000_000))
+                if Task.isCancelled { return }
+                let t = Double(i) / Double(steps)
+                let eased = 1 - pow(1 - t, 3) // ease-out cubic: fast start, gentle stop
+                offset = start + (target - start) * eased
+            }
+        }
     }
 
     private var displayedDate: Date { anchorNow.addingTimeInterval(offset) }
