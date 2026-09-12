@@ -288,20 +288,26 @@ struct BackgroundView: View {
         let rect = CGRect(x: x / 100 * size.width - d / 2, y: y / 100 * size.height - d / 2, width: d, height: d)
         context.opacity = opacity
 
-        // A radial gradient, not a Gaussian blur — blurring a disc this small by a
-        // CSS-scale radius (50-120pt) disperses its color below visible density.
-        // A gradient reproduces the same soft box-shadow glow at any size; CSS's own
-        // blur-radius reads much tighter than a same-radius Gaussian would, so the
-        // gradient's radius and falloff are both scaled down from the raw value.
-        let glowRadius = d / 2 + glowSpread + glowBlur * 0.35
-        context.fill(Path(ellipseIn: CGRect(x: rect.midX - glowRadius, y: rect.midY - glowRadius, width: glowRadius * 2, height: glowRadius * 2)), with: .radialGradient(
-            Gradient(stops: [
-                .init(color: glowColor.opacity(glowOpacity), location: 0),
-                .init(color: glowColor.opacity(glowOpacity * 0.4), location: 0.2),
-                .init(color: glowColor.opacity(glowOpacity * 0.08), location: 0.5),
-                .init(color: glowColor.opacity(0), location: 1),
-            ]),
-            center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: glowRadius
+        // A radial gradient standing in for a Gaussian blur — Canvas's `.blur()` filter
+        // disperses a shape this small over a much wider area than the same numeric
+        // radius reads as a CSS `box-shadow` blur. Reproducing the actual CSS math
+        // (a disc of radius R blurred by a Gaussian of sigma = blur/2, per the CSS
+        // Backgrounds spec) instead of an eyeballed falloff is what makes this match
+        // the design exactly rather than approximately: the blurred edge of a disc is
+        // an erfc profile centered on R with that same sigma.
+        let edgeRadius = d / 2 + glowSpread
+        let sigma = max(glowBlur / 2, 0.01)
+        let maxRadius = edgeRadius + 4 * sigma // erfc(4) ≈ 1.5e-8, i.e. visually zero
+        let stopCount = 16
+        let stops: [Gradient.Stop] = (0...stopCount).map { i in
+            let t = Double(i) / Double(stopCount)
+            let r = t * maxRadius
+            let alpha = 0.5 * erfc((r - edgeRadius) / (sigma * 1.4142135623730951))
+            return .init(color: glowColor.opacity(glowOpacity * alpha), location: t)
+        }
+        context.fill(Path(ellipseIn: CGRect(x: rect.midX - maxRadius, y: rect.midY - maxRadius, width: maxRadius * 2, height: maxRadius * 2)), with: .radialGradient(
+            Gradient(stops: stops),
+            center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: maxRadius
         ))
 
         let gradientCenter = CGPoint(x: rect.minX + rect.width * 0.36, y: rect.minY + rect.height * 0.32)
