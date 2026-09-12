@@ -35,6 +35,7 @@ struct ClockListView: View {
                 )
                 .frame(height: 230)
                 .frame(maxHeight: .infinity, alignment: .top)
+                .ignoresSafeArea()
                 .allowsHitTesting(false)
 
                 VStack(spacing: 0) {
