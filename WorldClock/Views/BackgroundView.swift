@@ -288,10 +288,18 @@ struct BackgroundView: View {
         let rect = CGRect(x: x / 100 * size.width - d / 2, y: y / 100 * size.height - d / 2, width: d, height: d)
         context.opacity = opacity
 
-        context.drawLayer { ctx in
-            ctx.addFilter(.blur(radius: glowBlur))
-            ctx.fill(Path(ellipseIn: rect.insetBy(dx: -glowSpread, dy: -glowSpread)), with: .color(glowColor.opacity(glowOpacity)))
-        }
+        // A radial gradient, not a Gaussian blur — blurring a disc this small by a
+        // CSS-scale radius (50-120pt) disperses its color below visible density.
+        // A gradient reproduces the same soft box-shadow glow reliably at any size.
+        let glowRadius = d / 2 + glowSpread + glowBlur
+        context.fill(Path(ellipseIn: CGRect(x: rect.midX - glowRadius, y: rect.midY - glowRadius, width: glowRadius * 2, height: glowRadius * 2)), with: .radialGradient(
+            Gradient(stops: [
+                .init(color: glowColor.opacity(glowOpacity), location: 0),
+                .init(color: glowColor.opacity(glowOpacity * 0.35), location: 0.4),
+                .init(color: glowColor.opacity(0), location: 1),
+            ]),
+            center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: glowRadius
+        ))
 
         let gradientCenter = CGPoint(x: rect.minX + rect.width * 0.36, y: rect.minY + rect.height * 0.32)
         context.fill(Path(ellipseIn: rect), with: .radialGradient(
