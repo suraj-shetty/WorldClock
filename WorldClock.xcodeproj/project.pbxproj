@@ -16,12 +16,14 @@
 		6ABA88C045AAF6F0EB2B4C96 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
 		6C0641485028C8FAA1B6BFF7 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
 		84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
+		87A6E0EA32A4DD1017A5EFDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
 		8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
 		9563F9CD74727D9938275F6F /* BackgroundMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */; };
 		9AAB187593602F8618787083 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
 		B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
 		E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
 		EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
+		EA9339B39BDFD8D11C8ED1EC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
 		EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
 		F0086A0933C87B8B39DCDEC1 /* AddTimeZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */; };
 		F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
@@ -53,6 +55,7 @@
 		D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTimeZoneView.swift; sourceTree = "<group>"; };
 		D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelView.swift; sourceTree = "<group>"; };
 		DF716C33CB766DE62DA10940 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		F2C4A35CACC525D4840BAA11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WorldClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -88,6 +91,7 @@
 		2B5F3637322CC2063FAA44CD /* WorldClock */ = {
 			isa = PBXGroup;
 			children = (
+				F2C4A35CACC525D4840BAA11 /* Assets.xcassets */,
 				DF716C33CB766DE62DA10940 /* Info.plist */,
 				8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */,
 				1395B4340AAD52B14CB9B98D /* DesignSystem */,
@@ -168,6 +172,7 @@
 			buildConfigurationList = 9F8EDF1348945A362E94B5D0 /* Build configuration list for PBXNativeTarget "WorldClock_macOS" */;
 			buildPhases = (
 				B1DC9CB5111A67AC0ECFAF8A /* Sources */,
+				14492258757FEB1AB7221DCD /* Resources */,
 			);
 			buildRules = (
 			);
@@ -185,6 +190,7 @@
 			buildConfigurationList = 01B2147CA19A5A73B6786BAC /* Build configuration list for PBXNativeTarget "WorldClock_iOS" */;
 			buildPhases = (
 				89684E3BB978C9E4269551DF /* Sources */,
+				55087C0CFB8A291B653D34A9 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -236,6 +242,25 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		14492258757FEB1AB7221DCD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EA9339B39BDFD8D11C8ED1EC /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		55087C0CFB8A291B653D34A9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87A6E0EA32A4DD1017A5EFDF /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		7F5DFD8871FD02DA763DD9B6 /* Sources */ = {
