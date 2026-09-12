@@ -48,16 +48,23 @@ struct ClockListView: View {
                     // the user would otherwise be doing.
                     .scrollDisabled(viewModel.selectedEntryID != nil)
 
-                    if viewModel.selectedEntryID == nil {
-                        TimeWheelView(
-                            anchorNow: now,
-                            anchorTimeZone: .current,
-                            use24Hour: use24Hour,
-                            offset: $viewModel.offset
-                        )
-                        .padding(.horizontal, Theme.Spacing.base)
-                        .padding(.bottom, Theme.Spacing.base)
-                    }
+                    // Always present (never structurally inserted/removed) so its
+                    // appearance/disappearance is a genuine animatable height change
+                    // instead of a List-adjacent layout snap — see ClockRow's identical
+                    // treatment below for why the `if` version visibly jumped.
+                    TimeWheelView(
+                        anchorNow: now,
+                        anchorTimeZone: .current,
+                        use24Hour: use24Hour,
+                        offset: $viewModel.offset
+                    )
+                    .padding(.horizontal, Theme.Spacing.base)
+                    .padding(.bottom, Theme.Spacing.base)
+                    .frame(height: viewModel.selectedEntryID == nil ? 94 : 0, alignment: .top)
+                    .opacity(viewModel.selectedEntryID == nil ? 1 : 0)
+                    .clipped()
+                    .allowsHitTesting(viewModel.selectedEntryID == nil)
+                    .animation(.easeInOut(duration: 0.25), value: viewModel.selectedEntryID)
                 }
             }
         }
@@ -123,19 +130,30 @@ private struct ClockRow: View {
                         .font(.system(size: 32, weight: .light))
                         .monospacedDigit()
                         .foregroundStyle(Theme.onSurface)
+                        // Digits roll like an odometer instead of cross-fading/snapping —
+                        // reads far more naturally for a clock face, especially while
+                        // scrubbing the wheel where the value changes continuously.
+                        .contentTransition(.numericText())
+                        .animation(.snappy(duration: 0.35), value: timeString)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
 
-            if isSelected {
-                TimeWheelView(
-                    anchorNow: now,
-                    anchorTimeZone: entry.timeZone,
-                    use24Hour: use24Hour,
-                    offset: $viewModel.offset
-                )
-            }
+            // Always present (never structurally inserted/removed) — SwiftUI can only
+            // animate this smoothly as a continuous height/opacity change; toggling it
+            // in and out of the view tree with `if` made every row below snap into its
+            // new position instead of sliding.
+            TimeWheelView(
+                anchorNow: now,
+                anchorTimeZone: entry.timeZone,
+                use24Hour: use24Hour,
+                offset: $viewModel.offset
+            )
+            .frame(height: isSelected ? 78 : 0, alignment: .top)
+            .opacity(isSelected ? 1 : 0)
+            .clipped()
+            .allowsHitTesting(isSelected)
         }
         .padding(Theme.Spacing.md)
         .background(
