@@ -6,3 +6,25 @@ xcuserdata/
 
 # Per-developer signing. Config/Signing.xcconfig is committed and includes this optionally.
 /Config/Signing.local.xcconfig
+
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+.build/
+
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
