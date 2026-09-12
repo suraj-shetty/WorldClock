@@ -1,0 +1,575 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0BB2956E12E18D61646508AB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		388F30C46895412C3B31A9B0 /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
+		3F2FFD64C5ABB9B7CB930CF5 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
+		4A3122E6B8B906903E53000E /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
+		5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
+		637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
+		6ABA88C045AAF6F0EB2B4C96 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
+		6C0641485028C8FAA1B6BFF7 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
+		84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
+		8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		9563F9CD74727D9938275F6F /* BackgroundMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */; };
+		9AAB187593602F8618787083 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
+		B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
+		E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
+		EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
+		EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
+		F0086A0933C87B8B39DCDEC1 /* AddTimeZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */; };
+		F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
+		F74A2BF4833F0C9E41071B02 /* AddTimeZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		055C6662C3E6C267A8C74A0E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4FEE5BB48363CCAB29BB19F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D7F0C1B1F4F449E51F694777;
+			remoteInfo = WorldClock_iOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		033A4801901D3D687C43135D /* WorldClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		108E7658E568871CDE8B276E /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
+		1E1B05A67836F498146833A1 /* ClockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockListView.swift; sourceTree = "<group>"; };
+		20D2A1BF89CE5E1AD79330EF /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockBoardViewModel.swift; sourceTree = "<group>"; };
+		48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockEntry.swift; sourceTree = "<group>"; };
+		53E2392F6806DC338D023E4C /* WorldClock.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockApp.swift; sourceTree = "<group>"; };
+		A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundMathTests.swift; sourceTree = "<group>"; };
+		C1B0222D9B6826227F1433D7 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTimeZoneView.swift; sourceTree = "<group>"; };
+		D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelView.swift; sourceTree = "<group>"; };
+		DF716C33CB766DE62DA10940 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WorldClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0CDBF74ADEB1DAE5CF798863 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */,
+				108E7658E568871CDE8B276E /* BackgroundView.swift */,
+				1E1B05A67836F498146833A1 /* ClockListView.swift */,
+				865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */,
+				D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		0D429892A76C495639F93075 /* WorldClockTests */ = {
+			isa = PBXGroup;
+			children = (
+				A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */,
+			);
+			path = WorldClockTests;
+			sourceTree = "<group>";
+		};
+		1395B4340AAD52B14CB9B98D /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				20D2A1BF89CE5E1AD79330EF /* Theme.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		2B5F3637322CC2063FAA44CD /* WorldClock */ = {
+			isa = PBXGroup;
+			children = (
+				DF716C33CB766DE62DA10940 /* Info.plist */,
+				8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */,
+				1395B4340AAD52B14CB9B98D /* DesignSystem */,
+				8261EFDC3FEA8BD378EECC04 /* Models */,
+				D28CE9588389D1627FA9B974 /* ViewModels */,
+				0CDBF74ADEB1DAE5CF798863 /* Views */,
+			);
+			path = WorldClock;
+			sourceTree = "<group>";
+		};
+		673EB4F59C0940A76A836601 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				53E2392F6806DC338D023E4C /* WorldClock.app */,
+				033A4801901D3D687C43135D /* WorldClock.app */,
+				FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8261EFDC3FEA8BD378EECC04 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A35088758CD294A4093C6BFB /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				C1B0222D9B6826227F1433D7 /* Signing.xcconfig */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		D28CE9588389D1627FA9B974 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		F9BD90B659B5E333CE924166 = {
+			isa = PBXGroup;
+			children = (
+				A35088758CD294A4093C6BFB /* Config */,
+				2B5F3637322CC2063FAA44CD /* WorldClock */,
+				0D429892A76C495639F93075 /* WorldClockTests */,
+				673EB4F59C0940A76A836601 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		3C164729C4BF5857D77375E7 /* WorldClockTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9EC2AFAE2B89DB37BEABDEC7 /* Build configuration list for PBXNativeTarget "WorldClockTests" */;
+			buildPhases = (
+				7F5DFD8871FD02DA763DD9B6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4186328E770AC5D4A08745D7 /* PBXTargetDependency */,
+			);
+			name = WorldClockTests;
+			packageProductDependencies = (
+			);
+			productName = WorldClockTests;
+			productReference = FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		54C22D0578A33FCB1FD5C3E3 /* WorldClock_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9F8EDF1348945A362E94B5D0 /* Build configuration list for PBXNativeTarget "WorldClock_macOS" */;
+			buildPhases = (
+				B1DC9CB5111A67AC0ECFAF8A /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorldClock_macOS;
+			packageProductDependencies = (
+			);
+			productName = WorldClock_macOS;
+			productReference = 033A4801901D3D687C43135D /* WorldClock.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 01B2147CA19A5A73B6786BAC /* Build configuration list for PBXNativeTarget "WorldClock_iOS" */;
+			buildPhases = (
+				89684E3BB978C9E4269551DF /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorldClock_iOS;
+			packageProductDependencies = (
+			);
+			productName = WorldClock_iOS;
+			productReference = 53E2392F6806DC338D023E4C /* WorldClock.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4FEE5BB48363CCAB29BB19F5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					54C22D0578A33FCB1FD5C3E3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					D7F0C1B1F4F449E51F694777 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 7AEB925185374BCFE4F33712 /* Build configuration list for PBXProject "WorldClock" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = F9BD90B659B5E333CE924166;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 673EB4F59C0940A76A836601 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */,
+				54C22D0578A33FCB1FD5C3E3 /* WorldClock_macOS */,
+				3C164729C4BF5857D77375E7 /* WorldClockTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7F5DFD8871FD02DA763DD9B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9563F9CD74727D9938275F6F /* BackgroundMathTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		89684E3BB978C9E4269551DF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0086A0933C87B8B39DCDEC1 /* AddTimeZoneView.swift in Sources */,
+				3F2FFD64C5ABB9B7CB930CF5 /* BackgroundView.swift in Sources */,
+				84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */,
+				F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */,
+				EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */,
+				B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */,
+				8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */,
+				388F30C46895412C3B31A9B0 /* TimeWheelView.swift in Sources */,
+				6C0641485028C8FAA1B6BFF7 /* WorldClockApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1DC9CB5111A67AC0ECFAF8A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F74A2BF4833F0C9E41071B02 /* AddTimeZoneView.swift in Sources */,
+				9AAB187593602F8618787083 /* BackgroundView.swift in Sources */,
+				EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */,
+				E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */,
+				637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */,
+				5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */,
+				0BB2956E12E18D61646508AB /* Theme.swift in Sources */,
+				4A3122E6B8B906903E53000E /* TimeWheelView.swift in Sources */,
+				6ABA88C045AAF6F0EB2B4C96 /* WorldClockApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4186328E770AC5D4A08745D7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */;
+			targetProxy = 055C6662C3E6C267A8C74A0E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0B666117FDA0EC75012E7644 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorldClock.app/WorldClock";
+			};
+			name = Debug;
+		};
+		2B211E7776367C1870A76E05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp;
+				PRODUCT_NAME = WorldClock;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		2D63B1C689A2C530134C0101 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp;
+				PRODUCT_NAME = WorldClock;
+				SDKROOT = macosx;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		98553BE3FFC50499F0AC32FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		9C351F063799EEB46F6BB676 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WorldClock.app/WorldClock";
+			};
+			name = Release;
+		};
+		A2FCDEDD00A459D2C54008AD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp;
+				PRODUCT_NAME = WorldClock;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AFAEFE15A9B99482EC877F49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		E04D8B4532BE7D5080FDEED9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClock/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp;
+				PRODUCT_NAME = WorldClock;
+				SDKROOT = macosx;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		01B2147CA19A5A73B6786BAC /* Build configuration list for PBXNativeTarget "WorldClock_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				2B211E7776367C1870A76E05 /* Debug */,
+				A2FCDEDD00A459D2C54008AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7AEB925185374BCFE4F33712 /* Build configuration list for PBXProject "WorldClock" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AFAEFE15A9B99482EC877F49 /* Debug */,
+				98553BE3FFC50499F0AC32FC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9EC2AFAE2B89DB37BEABDEC7 /* Build configuration list for PBXNativeTarget "WorldClockTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0B666117FDA0EC75012E7644 /* Debug */,
+				9C351F063799EEB46F6BB676 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		9F8EDF1348945A362E94B5D0 /* Build configuration list for PBXNativeTarget "WorldClock_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E04D8B4532BE7D5080FDEED9 /* Debug */,
+				2D63B1C689A2C530134C0101 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4FEE5BB48363CCAB29BB19F5 /* Project object */;
+}

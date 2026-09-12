@@ -1,0 +1,80 @@
+# Xcode project definition for WorldClock. Generate with: xcodegen generate
+#
+# The generated WorldClock.xcodeproj IS committed, so nothing here is required to
+# open, build, or run the app. This file exists so build settings stay
+# reviewable in a diff instead of buried in project.pbxproj. If you edit
+# settings in Xcode's UI, mirror them here or the next `xcodegen generate`
+# will revert them.
+
+name: WorldClock
+options:
+  bundleIdPrefix: org.surajshetty
+  deploymentTarget:
+    iOS: "17.0"
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+
+targets:
+  WorldClock:
+    type: application
+    # One shared source tree built for both platforms — XcodeGen generates
+    # WorldClock_iOS and WorldClock_macOS targets from this single definition.
+    platform: [iOS, macOS]
+    sources:
+      - path: WorldClock
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    info:
+      path: WorldClock/Info.plist
+      properties:
+        CFBundleDisplayName: WorldClock
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_NAME: WorldClock
+        PRODUCT_BUNDLE_IDENTIFIER: org.surajshetty.worldclockapp
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+
+  WorldClockTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: WorldClockTests
+    dependencies:
+      - target: WorldClock_iOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.surajshetty.worldclockapp.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGNING_ALLOWED: NO
+
+schemes:
+  WorldClock_iOS:
+    build:
+      targets:
+        WorldClock_iOS: all
+        WorldClockTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - WorldClockTests
+
+  WorldClock_macOS:
+    build:
+      targets:
+        WorldClock_macOS: all
+    run:
+      config: Debug

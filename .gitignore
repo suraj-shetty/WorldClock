@@ -1,0 +1,8 @@
+.DS_Store
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# Per-developer signing. Config/Signing.xcconfig is committed and includes this optionally.
+/Config/Signing.local.xcconfig

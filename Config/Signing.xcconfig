@@ -1,0 +1,13 @@
+// Signing, kept out of the tracked project file.
+//
+// Put your own Team ID in `Config/Signing.local.xcconfig`, which is gitignored:
+//
+//     DEVELOPMENT_TEAM = ABCDE12345
+//
+// Simulator builds and the test suite need no team at all, so a fresh clone builds as-is.
+// Only signing for a physical device requires this.
+
+DEVELOPMENT_TEAM =
+
+// Optional — the `?` means a missing file is not an error, which is what lets a fresh clone build.
+#include? "Signing.local.xcconfig"
