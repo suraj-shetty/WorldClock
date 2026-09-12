@@ -91,11 +91,16 @@ struct TimeWheelView: View {
 
             if isHour {
                 let hour = calendar.component(.hour, from: tickDate)
+                // Labels arc upward toward the center needle — as ticks slide during a
+                // drag or the live clock, each one rises as it approaches center and
+                // sinks back down as it passes, instead of sitting on a flat baseline.
+                let distanceRatio = min(abs(x - center) / max(center, 1), 1)
+                let lift = 6 * cos(distanceRatio * .pi / 2)
                 context.draw(
                     Text(hourLabel(hour: hour))
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(Theme.onSurfaceVariant.opacity(0.7)),
-                    at: CGPoint(x: x, y: 4)
+                        .foregroundColor(Theme.onSurfaceVariant.opacity(0.7 + 0.3 * (1 - distanceRatio))),
+                    at: CGPoint(x: x, y: 10 - lift)
                 )
             }
 
@@ -106,6 +111,6 @@ struct TimeWheelView: View {
     private func hourLabel(hour: Int) -> String {
         if use24Hour { return String(format: "%02d", hour) }
         let displayHour = hour % 12 == 0 ? 12 : hour % 12
-        return "\(displayHour)\(hour < 12 ? "A" : "P")"
+        return "\(displayHour)\(hour < 12 ? "AM" : "PM")"
     }
 }
