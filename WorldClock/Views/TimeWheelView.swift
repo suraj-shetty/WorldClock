@@ -67,11 +67,22 @@ struct TimeWheelView: View {
         let center = size.width / 2
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = anchorTimeZone
-        let halfTickCount = Int(center / (pixelsPerHour / 2)) + 1
+        let pixelsPerSecond = pixelsPerHour / 3600
+        let display = displayedDate
 
-        for k in -halfTickCount...halfTickCount {
-            let tickDate = displayedDate.addingTimeInterval(Double(k) * 1800)
-            let x = center + CGFloat(k) * (pixelsPerHour / 2)
+        // Ticks must land on real half-hour clock boundaries (so "isHour" reliably
+        // alternates and labels are stable) — NOT on `display + k*1800`, which ties
+        // every tick's alignment to the live current second and meant a hover label
+        // only ever appeared during the one minute each half hour when `display`
+        // itself happened to fall exactly on :00 or :30.
+        let halfRangeSeconds = Double(center) / pixelsPerSecond
+        let rangeStart = display.addingTimeInterval(-halfRangeSeconds)
+        let startEpoch = (rangeStart.timeIntervalSinceReferenceDate / 1800).rounded(.down) * 1800
+        let rangeEnd = display.addingTimeInterval(halfRangeSeconds)
+
+        var tickDate = Date(timeIntervalSinceReferenceDate: startEpoch)
+        while tickDate <= rangeEnd {
+            let x = center + CGFloat(tickDate.timeIntervalSince(display) * Double(pixelsPerSecond))
             let minute = calendar.component(.minute, from: tickDate)
             let isHour = minute == 0
 
@@ -87,6 +98,8 @@ struct TimeWheelView: View {
                     at: CGPoint(x: x, y: 4)
                 )
             }
+
+            tickDate = tickDate.addingTimeInterval(1800)
         }
     }
 
