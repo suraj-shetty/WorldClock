@@ -5,28 +5,36 @@ import AppKit
 import UIKit
 #endif
 
-// MARK: - Sky color keyframes
-// Extracted from the Stitch "Atmospheric Horizon" exports (see design docs):
-// - midnight / dawn / dusk stops come straight from the generated HTML's
-//   `skyGradientBase` gradients (state1/state2/orbit-sunrise-dawn screens).
-// - midday has no generated screen to sample, so it uses the "Solar Noon"
-//   colors documented in the design-system spec instead.
-// Validated in WorldClockBackground.playground before porting here.
+// MARK: - "Nocturne" sky illustration
+// Ported from the Claude Design handoff (`Sky.dc.html`): a parametric sky driven by
+// hour-of-day (0..24, fractional) — gradient, star field, sun/moon arc, clouds, haze,
+// and a mountain/lake terrain layer. Values (colors, curves, geometry) are transcribed
+// directly from the design's keyframe table and formulas so this renders pixel-close
+// to the reference, not just "similar."
 
 private struct SkyKeyframe {
     let hour: Double
-    let top: Color
-    let mid: Color
-    let bottom: Color
+    let top, up, mid, hz: Color
+    let star: Double
+    let cloudTint: Color
+    let cloudAlpha: Double
+    let haze: Color
 }
 
 private let skyKeyframes: [SkyKeyframe] = [
-    .init(hour: 0,  top: Color(hex: 0x050713), mid: Color(hex: 0x0d1226), bottom: Color(hex: 0x1c122e)), // midnight
-    .init(hour: 6,  top: Color(hex: 0x0d1628), mid: Color(hex: 0x1a223a), bottom: Color(hex: 0x11131d)), // dawn
-    .init(hour: 12, top: Color(hex: 0x0c4a6e), mid: Color(hex: 0x0284c7), bottom: Color(hex: 0x38bdf8)), // midday
-    .init(hour: 18, top: Color(hex: 0x0a0f1d), mid: Color(hex: 0x151a30), bottom: Color(hex: 0x12131d)), // dusk / golden hour
-    .init(hour: 24, top: Color(hex: 0x050713), mid: Color(hex: 0x0d1226), bottom: Color(hex: 0x1c122e))  // wraps to midnight
+    .init(hour: 0,    top: Color(hex: 0x0b0d1c), up: Color(hex: 0x101228), mid: Color(hex: 0x141830), hz: Color(hex: 0x1d2140), star: 1,    cloudTint: Color(hex: 0x3a3f63), cloudAlpha: 0.42, haze: Color(hex: 0x141731)),
+    .init(hour: 4.5,  top: Color(hex: 0x101227), up: Color(hex: 0x181b38), mid: Color(hex: 0x22254a), hz: Color(hex: 0x3c3358), star: 0.5,  cloudTint: Color(hex: 0x413f68), cloudAlpha: 0.5,  haze: Color(hex: 0x241f3d)),
+    .init(hour: 6.5,  top: Color(hex: 0x2b2c52), up: Color(hex: 0x4a4470), mid: Color(hex: 0x6e5f85), hz: Color(hex: 0xc49a8d), star: 0.04, cloudTint: Color(hex: 0xb48d94), cloudAlpha: 0.58, haze: Color(hex: 0x8d6f78)),
+    .init(hour: 9,    top: Color(hex: 0x3a4570), up: Color(hex: 0x606b95), mid: Color(hex: 0x7f8aae), hz: Color(hex: 0xbcc2d2), star: 0,    cloudTint: Color(hex: 0xd2d8e6), cloudAlpha: 0.52, haze: Color(hex: 0x9aa3bb)),
+    .init(hour: 12,   top: Color(hex: 0x47528a), up: Color(hex: 0x6b77a6), mid: Color(hex: 0x8b98bd), hz: Color(hex: 0xc6cddb), star: 0,    cloudTint: Color(hex: 0xe2e7f0), cloudAlpha: 0.58, haze: Color(hex: 0xa5aec6)),
+    .init(hour: 15,   top: Color(hex: 0x414877), up: Color(hex: 0x6a6c99), mid: Color(hex: 0x8a86ab), hz: Color(hex: 0xcbb3ae), star: 0,    cloudTint: Color(hex: 0xd6c9d0), cloudAlpha: 0.54, haze: Color(hex: 0xa08e9e)),
+    .init(hour: 18,   top: Color(hex: 0x1e2144), up: Color(hex: 0x413d67), mid: Color(hex: 0x6d5b88), hz: Color(hex: 0xc08e7f), star: 0.16, cloudTint: Color(hex: 0x8e7489), cloudAlpha: 0.6,  haze: Color(hex: 0x7d5c69)),
+    .init(hour: 20.5, top: Color(hex: 0x131628), up: Color(hex: 0x1f2140), mid: Color(hex: 0x33305a), hz: Color(hex: 0x5c4a6e), star: 0.58, cloudTint: Color(hex: 0x4c4666), cloudAlpha: 0.5,  haze: Color(hex: 0x33294a)),
+    .init(hour: 24,   top: Color(hex: 0x0b0d1c), up: Color(hex: 0x101228), mid: Color(hex: 0x141830), hz: Color(hex: 0x1d2140), star: 1,    cloudTint: Color(hex: 0x3a3f63), cloudAlpha: 0.42, haze: Color(hex: 0x141731)),
 ]
+
+private let skyInk = Color(hex: 0x090b18)
+private let skyAccent = Color(hex: 0x9184d9) // Nocturne accent — used only for the moon's glow here
 
 extension Color {
     /// RGB components for interpolation. `#if os()` picks the right platform color type
@@ -50,38 +58,99 @@ private func lerp(_ a: Color, _ b: Color, _ t: Double) -> Color {
                  blue: ac.b + (bc.b - ac.b) * t)
 }
 
-/// Continuous interpolation between the nearest two keyframes — no discrete jump between buckets.
-func skyColors(forHour hour: Double) -> (top: Color, mid: Color, bottom: Color) {
-    let raw = hour.truncatingRemainder(dividingBy: 24)
-    let h = raw < 0 ? raw + 24 : raw
-    let i = skyKeyframes.firstIndex { $0.hour > h } ?? 1
-    let a = skyKeyframes[i - 1], b = skyKeyframes[i]
-    let t = (h - a.hour) / (b.hour - a.hour)
-    return (lerp(a.top, b.top, t), lerp(a.mid, b.mid, t), lerp(a.bottom, b.bottom, t))
+private func clamp01(_ v: Double) -> Double { min(max(v, 0), 1) }
+private func ramp(_ v: Double, _ a: Double, _ b: Double) -> Double { clamp01((v - a) / (b - a)) }
+
+/// Internal (not private) so `BackgroundMathTests` can exercise the palette math directly.
+struct SkyPalette {
+    let top, up, mid, hz: Color
+    let star: Double
+    let cloudTint: Color
+    let cloudAlpha: Double
+    let haze: Color
+}
+
+func skyPalette(forHour hour: Double) -> SkyPalette {
+    let h = hour.truncatingRemainder(dividingBy: 24)
+    let hh = h < 0 ? h + 24 : h
+    var i = 0
+    while i < skyKeyframes.count - 2 && hh >= skyKeyframes[i + 1].hour { i += 1 }
+    let a = skyKeyframes[i], b = skyKeyframes[i + 1]
+    let t = a.hour == b.hour ? 0 : clamp01((hh - a.hour) / (b.hour - a.hour))
+    return SkyPalette(
+        top: lerp(a.top, b.top, t), up: lerp(a.up, b.up, t), mid: lerp(a.mid, b.mid, t), hz: lerp(a.hz, b.hz, t),
+        star: a.star + (b.star - a.star) * t,
+        cloudTint: lerp(a.cloudTint, b.cloudTint, t), cloudAlpha: a.cloudAlpha + (b.cloudAlpha - a.cloudAlpha) * t,
+        haze: lerp(a.haze, b.haze, t)
+    )
 }
 
 // MARK: - Star field
-// Fixed relative positions lifted from the Stitch night screen's starfield markup.
+// Same deterministic PRNG (seed + LCG) as the design so the star layout matches exactly.
 
-private struct Star { let x: Double; let y: Double; let size: Double; let phase: Double }
+private struct SkyStar { let x, y, d, baseBrightness, dur, delay: Double }
 
-private let stars: [Star] = [
-    .init(x: 0.10, y: 0.07, size: 2, phase: 0.0),
-    .init(x: 0.25, y: 0.13, size: 3, phase: 0.7),
-    .init(x: 0.58, y: 0.05, size: 2, phase: 1.4),
-    .init(x: 0.84, y: 0.17, size: 2, phase: 2.0),
-    .init(x: 0.44, y: 0.21, size: 3, phase: 0.3),
-    .init(x: 0.14, y: 0.28, size: 2, phase: 1.8),
-    .init(x: 0.72, y: 0.25, size: 1, phase: 0.9),
-    .init(x: 0.46, y: 0.10, size: 2, phase: 2.5),
-    .init(x: 0.88, y: 0.32, size: 2, phase: 1.1)
+private let skyStars: [SkyStar] = {
+    var seed: UInt64 = 20260910
+    func rnd() -> Double {
+        seed = (seed &* 1664525 &+ 1013904223) % 4294967296
+        return Double(seed) / 4294967296
+    }
+    var out: [SkyStar] = []
+    for _ in 0..<90 {
+        let y = pow(rnd(), 1.7) * 58
+        out.append(SkyStar(x: rnd() * 100, y: y, d: 0.9 + rnd() * 1.7, baseBrightness: 0.35 + rnd() * 0.65, dur: 2.6 + rnd() * 4.4, delay: rnd() * 5))
+    }
+    return out
+}()
+
+// MARK: - Clouds (fixed layout, per-frame color/opacity)
+
+private struct SkyCloudBase { let x, y, w, h, blur, o: Double }
+private let skyCloudBases: [SkyCloudBase] = [
+    .init(x: 22, y: 16, w: 54, h: 9, blur: 13, o: 0.9),
+    .init(x: 74, y: 27, w: 44, h: 7, blur: 11, o: 0.7),
+    .init(x: 40, y: 44, w: 68, h: 8, blur: 15, o: 0.55),
+    .init(x: 86, y: 57, w: 38, h: 6, blur: 10, o: 0.45),
+    .init(x: 12, y: 66, w: 50, h: 6, blur: 12, o: 0.38),
 ]
 
-/// How "night-like" the sky is at this hour: 1 at midnight, 0 at midday.
-func nightFactor(forHour hour: Double) -> Double {
-    let h = hour.truncatingRemainder(dividingBy: 24)
-    let distanceFromMidnight = min(h, 24 - h) // 0...12
-    return 1 - min(distanceFromMidnight, 12) / 12
+// MARK: - Terrain (mountain ridges + lake), fixed geometry per the design's clip-paths
+
+private struct RidgeShape {
+    let bottomPercent, heightPercent, blur, ink: Double
+    let points: [(x: Double, y: Double)]
+}
+
+private let ridgeShapes: [RidgeShape] = [
+    .init(bottomPercent: 18, heightPercent: 27, blur: 2.4, ink: 0.42, points: [
+        (0, 100), (0, 66), (8, 44), (16, 58), (26, 28), (34, 47), (43, 20), (52, 43),
+        (61, 25), (70, 50), (79, 32), (88, 54), (96, 38), (100, 52), (100, 100),
+    ]),
+    .init(bottomPercent: 17, heightPercent: 21, blur: 1.2, ink: 0.66, points: [
+        (0, 100), (0, 78), (9, 54), (16, 70), (25, 40), (34, 63), (42, 32), (51, 58),
+        (59, 36), (69, 64), (77, 46), (86, 66), (94, 50), (100, 68), (100, 100),
+    ]),
+    .init(bottomPercent: 16, heightPercent: 16, blur: 0, ink: 0.84, points: [
+        (0, 100), (0, 62), (11, 32), (21, 56), (30, 26), (38, 52), (45, 78), (50, 92),
+        (55, 78), (62, 50), (71, 24), (81, 54), (91, 38), (100, 64), (100, 100),
+    ]),
+]
+
+private let waterHeightPercent: Double = 15
+private let shorelinePoints: [(x: Double, y: Double)] = [
+    (0, 5), (13, 2), (27, 6), (40, 2.5), (53, 6.5), (67, 3), (80, 7), (92, 3.5), (100, 6), (100, 100), (0, 100),
+]
+
+private func ridgePath(_ points: [(x: Double, y: Double)], in rect: CGRect) -> Path {
+    var path = Path()
+    guard let first = points.first else { return path }
+    path.move(to: CGPoint(x: rect.minX + first.x / 100 * rect.width, y: rect.minY + first.y / 100 * rect.height))
+    for p in points.dropFirst() {
+        path.addLine(to: CGPoint(x: rect.minX + p.x / 100 * rect.width, y: rect.minY + p.y / 100 * rect.height))
+    }
+    path.closeSubpath()
+    return path
 }
 
 // MARK: - Animated background
@@ -94,76 +163,277 @@ struct BackgroundView: View {
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
-                let sky = skyColors(forHour: hour)
-                let gradient = Gradient(stops: [
-                    .init(color: sky.top, location: 0),
-                    .init(color: sky.mid, location: 0.5),
-                    .init(color: sky.bottom, location: 1)
-                ])
-                context.fill(
-                    Path(CGRect(origin: .zero, size: size)),
-                    with: .linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height))
-                )
-
-                let elapsed = timeline.date.timeIntervalSinceReferenceDate
-                drawStars(&context, size: size, elapsed: elapsed)
-                drawCelestialBody(&context, size: size)
-                drawClouds(&context, size: size, elapsed: elapsed)
+                drawSky(context: &context, size: size, elapsed: timeline.date.timeIntervalSinceReferenceDate)
             }
         }
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: hour)
     }
 
-    private func drawStars(_ context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
-        let visibility = nightFactor(forHour: hour)
-        guard visibility > 0.01 else { return }
-        for star in stars {
-            let twinkle = (sin(elapsed * 1.6 + star.phase) + 1) / 2 // 0...1
-            context.opacity = visibility * (0.3 + 0.7 * twinkle)
-            let point = CGPoint(x: star.x * size.width, y: star.y * size.height)
-            let rect = CGRect(x: point.x - star.size / 2, y: point.y - star.size / 2, width: star.size, height: star.size)
-            context.fill(Path(ellipseIn: rect), with: .color(.white))
+    private func drawSky(context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
+        let raw = hour.truncatingRemainder(dividingBy: 24)
+        let h = raw < 0 ? raw + 24 : raw
+        let p = skyPalette(forHour: h)
+        let w = size.width, ht = size.height
+        let scale = min(w, ht) / 390
+
+        // 1. Base gradient — 4 stops at 0/30/62/100%.
+        context.fill(
+            Path(CGRect(origin: .zero, size: size)),
+            with: .linearGradient(
+                Gradient(stops: [
+                    .init(color: p.top, location: 0),
+                    .init(color: p.up, location: 0.30),
+                    .init(color: p.mid, location: 0.62),
+                    .init(color: p.hz, location: 1.0),
+                ]),
+                startPoint: .zero, endPoint: CGPoint(x: 0, y: ht)
+            )
+        )
+
+        // 2. Star field.
+        if p.star > 0.01 {
+            for star in skyStars {
+                let twinkle = (sin(elapsed * (2 * .pi / star.dur) + star.delay) + 1) / 2
+                context.opacity = star.baseBrightness * p.star * (0.35 + 0.65 * twinkle)
+                let point = CGPoint(x: star.x / 100 * w, y: star.y / 100 * ht)
+                let d = star.d * scale
+                context.fill(Path(ellipseIn: CGRect(x: point.x - d / 2, y: point.y - d / 2, width: d, height: d)), with: .color(Color(hex: 0xf3f5fe)))
+            }
+            context.opacity = 1
+        }
+
+        // Sun rides 5:40→19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20→6:20,
+        // continuous across midnight via `hh`.
+        let sunT = clamp01((h - 6) / 12)
+        let sunUp = sin(sunT * .pi)
+        let sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
+        let hh = h < 12 ? h + 24 : h
+        let moonT = clamp01((hh - 18) / 12)
+        let moonUp = sin(moonT * .pi)
+        let moonO = min(ramp(hh, 18.4, 20.2), 1 - ramp(hh, 27.4, 29.0))
+
+        let sunHi = Color(hex: 0xfffaf0)
+        let sunBody = lerp(Color(hex: 0xf6d9b4), Color(hex: 0xf9f2e0), sunUp)
+        let sunEdge = lerp(Color(hex: 0xe5a274), Color(hex: 0xf2e2c0), sunUp)
+        let sunX = 10 + sunT * 80, sunY = 80 - sunUp * 68
+        let sunW = 7 + (1 - sunUp) * 6.5
+
+        let moonHi = Color(hex: 0xf7f6ff)
+        let moonBody = Color(hex: 0xdcd9f0)
+        let moonEdge = Color(hex: 0xa9a3c9)
+        let moonX = 10 + moonT * 80, moonY = 80 - moonUp * 66
+        let moonW = 5.4 + (1 - moonUp) * 2.6
+
+        // 3. Blooms — horizon bloom first, then the soft halos riding with each disc.
+        drawBloom(&context, size: size, x: 50, y: 104, wPercent: 190, color: p.hz, colorOpacity: 0.7, opacity: 0.5)
+        if sunO > 0.01 {
+            drawBloom(&context, size: size, x: sunX, y: sunY + 3, wPercent: 130,
+                      color: lerp(Color(hex: 0xe08f63), Color(hex: 0xf4e8cc), sunUp), colorOpacity: 0.55,
+                      opacity: sunO * (0.34 + (1 - sunUp) * 0.3))
+        }
+        if moonO > 0.01 {
+            drawBloom(&context, size: size, x: moonX, y: moonY, wPercent: 70, color: skyAccent, colorOpacity: 0.5, opacity: moonO * 0.28)
+        }
+
+        // 4. Sun / moon discs, each with its own tight glow.
+        drawDisc(&context, size: size, x: sunX, y: sunY, wPercent: sunW, opacity: sunO,
+                 highlight: sunHi, body: sunBody, edge: sunEdge,
+                 glowColor: lerp(Color(hex: 0xe08f63), Color(hex: 0xf6e6c4), sunUp), glowOpacity: 0.30 + (1 - sunUp) * 0.22,
+                 glowBlur: (52 + (1 - sunUp) * 68) * scale, glowSpread: (8 + (1 - sunUp) * 16) * scale)
+        drawDisc(&context, size: size, x: moonX, y: moonY, wPercent: moonW, opacity: moonO,
+                 highlight: moonHi, body: moonBody, edge: moonEdge,
+                 glowColor: skyAccent, glowOpacity: 0.34, glowBlur: 46 * scale, glowSpread: 6 * scale)
+
+        // 5. Clouds, tinted warm toward the sun's highlight as it rises.
+        let lightC = lerp(p.cloudTint, sunHi, sunO * 0.35 * sunUp)
+        for cloud in skyCloudBases {
+            drawCloud(&context, size: size, x: cloud.x, y: cloud.y, wPercent: cloud.w, hPercent: cloud.h,
+                      blur: cloud.blur * scale, opacity: p.cloudAlpha * cloud.o, color: lightC)
+        }
+
+        // 6. Atmospheric haze — bottom 34%.
+        let hazeRect = CGRect(x: 0, y: ht * 0.66, width: w, height: ht * 0.34)
+        context.fill(Path(hazeRect), with: .linearGradient(
+            Gradient(stops: [
+                .init(color: p.haze.opacity(0), location: 0),
+                .init(color: p.haze.opacity(0.3), location: 0.55),
+                .init(color: p.haze.opacity(0.62), location: 1),
+            ]),
+            startPoint: CGPoint(x: 0, y: hazeRect.minY), endPoint: CGPoint(x: 0, y: hazeRect.maxY)
+        ))
+
+        // 7. Terrain — mountain ridges, ground, lake with reflection, mist.
+        let lit = max(sunO * sunUp, moonO * moonUp * 0.45)
+        let domX = sunO >= moonO ? sunX : moonX
+        drawTerrain(&context, size: size, palette: p, lit: lit, sunColor: sunBody, moonColor: moonBody, sunO: sunO, moonO: moonO, domX: domX, scale: scale)
+    }
+
+    private func drawBloom(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, color: Color, colorOpacity: Double, opacity: Double) {
+        guard opacity > 0.005 else { return }
+        let d = wPercent / 100 * size.width
+        let rect = CGRect(x: x / 100 * size.width - d / 2, y: y / 100 * size.height - d / 2, width: d, height: d)
+        context.opacity = opacity
+        context.fill(Path(ellipseIn: rect), with: .radialGradient(
+            Gradient(stops: [.init(color: color.opacity(colorOpacity), location: 0), .init(color: color.opacity(0), location: 0.7)]),
+            center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: d / 2
+        ))
+        context.opacity = 1
+    }
+
+    private func drawDisc(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, opacity: Double,
+                           highlight: Color, body: Color, edge: Color, glowColor: Color, glowOpacity: Double, glowBlur: Double, glowSpread: Double) {
+        guard opacity > 0.005 else { return }
+        let d = wPercent / 100 * size.width
+        let rect = CGRect(x: x / 100 * size.width - d / 2, y: y / 100 * size.height - d / 2, width: d, height: d)
+        context.opacity = opacity
+
+        context.drawLayer { ctx in
+            ctx.addFilter(.blur(radius: glowBlur))
+            ctx.fill(Path(ellipseIn: rect.insetBy(dx: -glowSpread, dy: -glowSpread)), with: .color(glowColor.opacity(glowOpacity)))
+        }
+
+        let gradientCenter = CGPoint(x: rect.minX + rect.width * 0.36, y: rect.minY + rect.height * 0.32)
+        context.fill(Path(ellipseIn: rect), with: .radialGradient(
+            Gradient(stops: [
+                .init(color: highlight, location: 0),
+                .init(color: body, location: 0.55),
+                .init(color: edge, location: 1),
+            ]),
+            center: gradientCenter, startRadius: 0, endRadius: d * 0.72
+        ))
+        context.opacity = 1
+    }
+
+    private func drawCloud(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, hPercent: Double, blur: Double, opacity: Double, color: Color) {
+        guard opacity > 0.005 else { return }
+        let w = wPercent / 100 * size.width, h = hPercent / 100 * size.height
+        let rect = CGRect(x: x / 100 * size.width - w / 2, y: y / 100 * size.height - h / 2, width: w, height: h)
+        context.opacity = opacity
+        context.drawLayer { ctx in
+            ctx.addFilter(.blur(radius: blur))
+            let center = CGPoint(x: rect.minX + rect.width * 0.46, y: rect.minY + rect.height * 0.58)
+            // The CSS radial is elliptical (closest-side of a non-square box); a circular
+            // approximation reads the same at this blur radius, so it isn't worth the extra
+            // draw-layer scale/unscale to reproduce the ellipse exactly.
+            ctx.fill(Path(ellipseIn: rect), with: .radialGradient(
+                Gradient(stops: [
+                    .init(color: color.opacity(0.9), location: 0),
+                    .init(color: color.opacity(0.5), location: 0.48),
+                    .init(color: color.opacity(0), location: 0.82),
+                ]),
+                center: center, startRadius: 0, endRadius: max(rect.width, rect.height) / 2
+            ))
         }
         context.opacity = 1
     }
 
-    private func drawCelestialBody(_ context: inout GraphicsContext, size: CGSize) {
-        let h = hour.truncatingRemainder(dividingBy: 24)
-        let isDay = h >= 6 && h < 18
-        let progress = isDay ? (h - 6) / 12 : (h < 6 ? (h + 6) / 12 : (h - 18) / 12)
+    private func drawTerrain(_ context: inout GraphicsContext, size: CGSize, palette p: SkyPalette, lit: Double, sunColor: Color, moonColor: Color, sunO: Double, moonO: Double, domX: Double, scale: CGFloat) {
+        let w = size.width, ht = size.height
 
-        let x = progress * size.width
-        let peakHeight = size.height * 0.18
-        let baseline = size.height * 0.55
-        let y = baseline - sin(progress * .pi) * (baseline - peakHeight)
+        for ridge in ridgeShapes {
+            let rect = CGRect(
+                x: -0.02 * w,
+                y: ht - ht * (ridge.bottomPercent + ridge.heightPercent) / 100,
+                width: 1.04 * w,
+                height: ht * ridge.heightPercent / 100
+            )
+            let cTop = lerp(lerp(p.hz, .white, 0.10 * (1 - ridge.ink) + lit * 0.12), skyInk, ridge.ink * 0.72)
+            let cMid = lerp(p.hz, skyInk, ridge.ink)
+            let cBot = lerp(p.mid, skyInk, min(1, ridge.ink + 0.12))
+            let path = ridgePath(ridge.points, in: rect)
+            if ridge.blur > 0.01 {
+                context.drawLayer { ctx in
+                    ctx.addFilter(.blur(radius: ridge.blur * scale))
+                    ctx.fill(path, with: .linearGradient(
+                        Gradient(stops: [.init(color: cTop, location: 0), .init(color: cMid, location: 0.38), .init(color: cBot, location: 1)]),
+                        startPoint: CGPoint(x: 0, y: rect.minY), endPoint: CGPoint(x: 0, y: rect.maxY)
+                    ))
+                }
+            } else {
+                context.fill(path, with: .linearGradient(
+                    Gradient(stops: [.init(color: cTop, location: 0), .init(color: cMid, location: 0.38), .init(color: cBot, location: 1)]),
+                    startPoint: CGPoint(x: 0, y: rect.minY), endPoint: CGPoint(x: 0, y: rect.maxY)
+                ))
+            }
+        }
 
-        // Sized relative to the canvas (26pt tuned against a 390pt-wide iPhone) so the
-        // sun/moon stay visually consistent on a much larger iPad or Mac window.
-        let scale = min(size.width, size.height) / 390
-        let radius: CGFloat = (isDay ? 26 : 20) * scale
-        let rect = CGRect(x: x - radius, y: y - radius, width: radius * 2, height: radius * 2)
-        let color: Color = isDay ? Color(hex: 0xFFC07A) : Color(hex: 0xAAC7FF)
+        // Ground band.
+        let groundRect = CGRect(x: 0, y: ht * 0.76, width: w, height: ht * 0.24)
+        context.fill(Path(groundRect), with: .linearGradient(
+            Gradient(stops: [
+                .init(color: p.mid.opacity(0), location: 0),
+                .init(color: lerp(p.mid, skyInk, 0.88), location: 0.28),
+                .init(color: lerp(p.mid, skyInk, 0.95), location: 1),
+            ]),
+            startPoint: CGPoint(x: 0, y: groundRect.minY), endPoint: CGPoint(x: 0, y: groundRect.maxY)
+        ))
+
+        // Lake — clipped to a soft irregular shoreline on its top edge only.
+        let waterRect = CGRect(x: 0, y: ht * (1 - waterHeightPercent / 100), width: w, height: ht * waterHeightPercent / 100)
+        let surface = lerp(p.hz, p.mid, 0.35)
+        let waterFar = lerp(surface, skyInk, 0.6)
+        let waterNear = lerp(surface, skyInk, 0.5)
+        let domColor = sunO >= moonO ? sunColor : moonColor
 
         context.drawLayer { ctx in
-            ctx.addFilter(.blur(radius: radius * 0.6))
-            ctx.opacity = 0.6
-            ctx.fill(Path(ellipseIn: rect.insetBy(dx: -radius * 0.8, dy: -radius * 0.8)), with: .color(color))
-        }
-        context.fill(Path(ellipseIn: rect), with: .color(color))
-    }
+            ctx.clip(to: ridgePath(shorelinePoints, in: waterRect))
+            ctx.fill(Path(waterRect), with: .linearGradient(
+                Gradient(colors: [waterFar, waterNear]),
+                startPoint: CGPoint(x: 0, y: waterRect.minY), endPoint: CGPoint(x: 0, y: waterRect.maxY)
+            ))
 
-    private func drawClouds(_ context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
-        let tint = nightFactor(forHour: hour) > 0.5 ? Color.white.opacity(0.08) : Color.white.opacity(0.18)
-        let drift1 = (sin(elapsed * 0.05) + 1) / 2 * size.width
-        let drift2 = (cos(elapsed * 0.04) + 1) / 2 * size.width
-        let w1 = size.width * 0.56, h1 = size.height * 0.071
-        let w2 = size.width * 0.67, h2 = size.height * 0.059
+            for (i, ridge) in ridgeShapes.enumerated() {
+                let reflHeightPercent = ridge.heightPercent * 0.55 / waterHeightPercent * 100
+                let reflRect = CGRect(x: -0.02 * w, y: waterRect.minY, width: 1.04 * w, height: waterRect.height * reflHeightPercent / 100)
+                let mirrored = ridge.points.map { (x: $0.x, y: 100 - $0.y) }
+                let color = lerp(waterFar, skyInk, 0.18 + Double(i) * 0.16)
+                let opacity = 0.9 - Double(i) * 0.12
+                let blur = 2.2 - Double(i) * 0.5
+                if blur > 0.01 {
+                    ctx.drawLayer { inner in
+                        inner.addFilter(.blur(radius: blur * scale))
+                        inner.fill(ridgePath(mirrored, in: reflRect), with: .color(color.opacity(opacity)))
+                    }
+                } else {
+                    ctx.fill(ridgePath(mirrored, in: reflRect), with: .color(color.opacity(opacity)))
+                }
+            }
 
-        context.drawLayer { ctx in
-            ctx.addFilter(.blur(radius: 30 * min(size.width, size.height) / 390))
-            ctx.fill(Path(ellipseIn: CGRect(x: drift1 - w1 / 2, y: size.height * 0.2, width: w1, height: h1)), with: .color(tint))
-            ctx.fill(Path(ellipseIn: CGRect(x: drift2 - w2 / 2, y: size.height * 0.32, width: w2, height: h2)), with: .color(tint))
+            // Specular column: a soft vertical light column under the dominant disc.
+            // The reference is an elliptical radial (36%/104%); a plain vertical
+            // gradient reads the same at this size and skips the extra transform.
+            let specColor = lerp(domColor, .white, 0.12)
+            let specO = 0.3 + lit * 0.45
+            let specX = max(6, min(94, domX))
+            let specRect = CGRect(x: waterRect.minX + (specX / 100 - 0.12) * w, y: waterRect.minY, width: 0.24 * w, height: waterRect.height)
+            ctx.drawLayer { inner in
+                inner.addFilter(.blur(radius: 3 * scale))
+                inner.fill(Path(specRect), with: .linearGradient(
+                    Gradient(stops: [.init(color: specColor.opacity(specO), location: 0), .init(color: specColor.opacity(0), location: 0.76)]),
+                    startPoint: CGPoint(x: 0, y: specRect.minY), endPoint: CGPoint(x: 0, y: specRect.maxY)
+                ))
+            }
+
+            // Shoreline highlight.
+            let shoreRect = CGRect(x: waterRect.minX, y: waterRect.minY, width: waterRect.width, height: waterRect.height * 0.16)
+            let shoreColor = lerp(surface, .white, 0.3).opacity(0.16 + lit * 0.1)
+            ctx.fill(Path(shoreRect), with: .linearGradient(
+                Gradient(colors: [shoreColor, shoreColor.opacity(0)]),
+                startPoint: CGPoint(x: 0, y: shoreRect.minY), endPoint: CGPoint(x: 0, y: shoreRect.maxY)
+            ))
         }
+
+        // Mist band, above the lake.
+        let mistRect = CGRect(x: 0, y: ht * (1 - 0.29), width: w, height: ht * 0.14)
+        let mistColor = p.haze.opacity(0.22 + lit * 0.08)
+        context.fill(Path(mistRect), with: .linearGradient(
+            Gradient(stops: [
+                .init(color: mistColor.opacity(0), location: 0),
+                .init(color: mistColor, location: 0.42),
+                .init(color: mistColor.opacity(0), location: 1),
+            ]),
+            startPoint: CGPoint(x: 0, y: mistRect.maxY), endPoint: CGPoint(x: 0, y: mistRect.minY)
+        ))
     }
 }
