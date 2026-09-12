@@ -417,18 +417,29 @@ struct BackgroundView: View {
                 }
             }
 
-            // Specular column: a soft vertical light column under the dominant disc.
-            // The reference is an elliptical radial (36%/104%); a plain vertical
-            // gradient reads the same at this size and skips the extra transform.
+            // Specular column: `radial-gradient(36% 104% at 50% 0%, ...)` on a 24%-wide,
+            // full-height box — an ellipse centered at the box's top-middle, wide 36% of
+            // the box width and tall 104% of the box height, so only its lower half is
+            // ever visible. Canvas's radial gradient is circular only, so the ellipse is
+            // built by scaling the coordinate space non-uniformly before drawing a unit
+            // circle, then letting the layer's transform stretch it back into shape —
+            // a plain box gradient (the earlier version here) reads as a flat-edged
+            // rectangle instead of a tapering reflection.
             let specColor = lerp(domColor, .white, 0.12)
             let specO = 0.3 + lit * 0.45
             let specX = max(6, min(94, domX))
-            let specRect = CGRect(x: waterRect.minX + (specX / 100 - 0.12) * w, y: waterRect.minY, width: 0.24 * w, height: waterRect.height)
+            let specBox = CGRect(x: waterRect.minX + (specX / 100 - 0.12) * w, y: waterRect.minY, width: 0.24 * w, height: waterRect.height)
+            let specRadiusX = 0.36 * specBox.width
+            let specRadiusY = 1.04 * specBox.height
             ctx.drawLayer { inner in
-                inner.addFilter(.blur(radius: 3 * scale))
-                inner.fill(Path(specRect), with: .linearGradient(
-                    Gradient(stops: [.init(color: specColor.opacity(specO), location: 0), .init(color: specColor.opacity(0), location: 0.76)]),
-                    startPoint: CGPoint(x: 0, y: specRect.minY), endPoint: CGPoint(x: 0, y: specRect.maxY)
+                inner.translateBy(x: specBox.midX, y: specBox.minY)
+                inner.scaleBy(x: specRadiusX, y: specRadiusY)
+                inner.fill(Path(ellipseIn: CGRect(x: -1, y: -1, width: 2, height: 2)), with: .radialGradient(
+                    Gradient(stops: [
+                        .init(color: specColor.opacity(specO), location: 0),
+                        .init(color: specColor.opacity(0), location: 0.76),
+                    ]),
+                    center: .zero, startRadius: 0, endRadius: 1
                 ))
             }
 
