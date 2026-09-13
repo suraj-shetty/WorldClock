@@ -92,7 +92,7 @@ struct ClockListView: View {
                                     entry: entry, now: now, use24Hour: use24Hour,
                                     showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
                                     homeTimeZone: homeTimeZone,
-                                    onDelete: { modelContext.delete(entry) },
+                                    onDelete: { deleteEntry(entry) },
                                     viewModel: viewModel
                                 )
                                     // A swipe-to-delete action would install a horizontal drag
@@ -102,7 +102,7 @@ struct ClockListView: View {
                                     // expanded state where the wheel is already using that drag.
                                     .contextMenu {
                                         Button(role: .destructive) {
-                                            modelContext.delete(entry)
+                                            deleteEntry(entry)
                                         } label: {
                                             Label("Delete", systemImage: "trash")
                                         }
@@ -199,6 +199,17 @@ struct ClockListView: View {
     private func addEntry(identifier: String, label: String) {
         let sortOrder = (entries.map(\.sortOrder).max() ?? -1) + 1
         modelContext.insert(ClockEntry(timeZoneIdentifier: identifier, label: label, sortOrder: sortOrder))
+    }
+
+    /// Deleting the *selected* entry left `selectedEntryID` pointing at nothing —
+    /// `gridColumns` and the bottom-wheel visibility both key off "is something
+    /// selected", not "does the selected entry still exist", so the board was stuck
+    /// showing a single column with no way back to the grid and no bottom wheel.
+    private func deleteEntry(_ entry: ClockEntry) {
+        if viewModel.selectedEntryID == entry.id {
+            viewModel.deselect()
+        }
+        modelContext.delete(entry)
     }
 }
 
