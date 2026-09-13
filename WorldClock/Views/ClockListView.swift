@@ -176,12 +176,12 @@ private struct ClockRow: View {
                                     .shadow(color: Theme.accent.opacity(0.7), radius: 4)
                             }
                             Text(entry.label)
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
                                 .tracking(-0.19)
                                 .foregroundStyle(isSelected ? Theme.textBright : Theme.text)
                                 .lineLimit(1)
                         }
-                        Text(deltaLabel)
+                        Text(subtitle)
                             .font(.system(size: 11.5))
                             .tracking(0.23)
                             .foregroundStyle(Theme.text.opacity(isSelected ? 0.62 : 0.6))
@@ -275,5 +275,10 @@ private struct ClockRow: View {
         let magnitude = abs(diffMinutes)
         let hours = magnitude / 60, minutes = magnitude % 60
         return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(minutes * 10 / 60)h"
+    }
+
+    private var subtitle: String {
+        guard let country = entry.country else { return deltaLabel }
+        return "\(country.flag) \(country.name) · \(deltaLabel)"
     }
 }
