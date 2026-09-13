@@ -24,13 +24,27 @@ struct ClockListView: View {
         homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
     }
 
-    /// One flexible column while a row is selected (see the comment at the grid's call
-    /// site for why), otherwise as many ~340pt columns as fit — 1 on an iPhone, more on
-    /// an iPad or a wide Mac window.
-    private var gridColumns: [GridItem] {
-        viewModel.selectedEntryID == nil
-            ? [GridItem(.adaptive(minimum: 320, maximum: 380), spacing: 10)]
-            : [GridItem(.flexible())]
+    /// As many ~330pt columns as fit — 1 on an iPhone, more on an iPad or a wide Mac
+    /// window — regardless of selection. A uniform grid (`LazyVGrid`) sizes every card
+    /// in a row to the tallest, so selecting a city (whose card grows taller with its
+    /// inline wheel) would either distort every column's row or force a collapse to a
+    /// single column; masonry's independent per-column stacks avoid both: expanding a
+    /// card only pushes down the cards below it in *that* column.
+    private func columnCount(for width: CGFloat) -> Int {
+        max(1, Int((width + 10) / 330))
+    }
+
+    /// Distributes entries round-robin across `count` columns (entry 0 → column 0,
+    /// entry 1 → column 1, ...). Not packed by actual height — that needs measuring
+    /// each card first — but with rows this uniform in height when collapsed, a plain
+    /// round-robin already keeps columns close to even.
+    private func columns(_ entries: [ClockEntry], count: Int) -> [[ClockEntry]] {
+        guard count > 1 else { return [entries] }
+        var result = Array(repeating: [ClockEntry](), count: count)
+        for (index, entry) in entries.enumerated() {
+            result[index % count].append(entry)
+        }
+        return result
     }
 
     var body: some View {
@@ -70,47 +84,53 @@ struct ClockListView: View {
                     header
                         .frame(maxWidth: 700)
 
-                    // A plain ScrollView + LazyVGrid, not List: List is backed by
-                    // UITableView, which recomputes self-sizing row heights in its own
-                    // layout pass outside SwiftUI's animation transaction — no combination
-                    // of .transition/.animation on the row's content can make THAT smooth,
-                    // which is why the row kept visibly jumping no matter how the wheel's
-                    // own appearance was animated. Plain SwiftUI layout has no such
-                    // disconnect. LazyVGrid keeps List's other benefit — off-screen rows
-                    // aren't instantiated — without its row-resize behavior.
+                    // A plain ScrollView, not List: List is backed by UITableView, which
+                    // recomputes self-sizing row heights in its own layout pass outside
+                    // SwiftUI's animation transaction — no combination of .transition/
+                    // .animation on the row's content can make THAT smooth, which is why
+                    // the row kept visibly jumping no matter how the wheel's own
+                    // appearance was animated. Plain SwiftUI layout has no such
+                    // disconnect.
                     //
-                    // Columns collapse to a single one the moment a row is selected: an
-                    // expanded card (with its inline wheel) is taller than a collapsed
-                    // one, and a multi-column grid sizes every card in a row to the
-                    // tallest — so browsing stays a multi-column grid on wide screens,
-                    // but selecting a city reflows to exactly the single-column layout
-                    // the expand/collapse animation was built and tested against.
-                    ScrollView {
-                        LazyVGrid(columns: gridColumns, spacing: 10) {
-                            ForEach(entries) { entry in
-                                ClockRow(
-                                    entry: entry, now: now, use24Hour: use24Hour,
-                                    showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
-                                    homeTimeZone: homeTimeZone,
-                                    onDelete: { deleteEntry(entry) },
-                                    viewModel: viewModel
-                                )
-                                    // A swipe-to-delete action would install a horizontal drag
-                                    // recognizer on the row that fights the wheel's own horizontal
-                                    // drag when this row is expanded — long-press works from a
-                                    // collapsed row; the visible "Delete City" button covers the
-                                    // expanded state where the wheel is already using that drag.
-                                    .contextMenu {
-                                        Button(role: .destructive) {
-                                            deleteEntry(entry)
-                                        } label: {
-                                            Label("Delete", systemImage: "trash")
+                    // Masonry (independent per-column VStacks), not LazyVGrid: a uniform
+                    // grid sizes every card in a row to its tallest member, so expanding
+                    // one card (taller, with its inline wheel) would stretch every card
+                    // beside it. Each column here lays out top-to-bottom on its own, so
+                    // expanding a card only pushes down the cards below it in that same
+                    // column — the rest of the board doesn't move.
+                    GeometryReader { geometry in
+                        ScrollView {
+                            let columnCount = columnCount(for: geometry.size.width)
+                            HStack(alignment: .top, spacing: 10) {
+                                ForEach(Array(columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
+                                    VStack(spacing: 10) {
+                                        ForEach(columnEntries) { entry in
+                                            ClockRow(
+                                                entry: entry, now: now, use24Hour: use24Hour,
+                                                showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
+                                                homeTimeZone: homeTimeZone,
+                                                onDelete: { deleteEntry(entry) },
+                                                viewModel: viewModel
+                                            )
+                                                // A swipe-to-delete action would install a horizontal drag
+                                                // recognizer on the row that fights the wheel's own horizontal
+                                                // drag when this row is expanded — long-press works from a
+                                                // collapsed row; the visible "Delete City" button covers the
+                                                // expanded state where the wheel is already using that drag.
+                                                .contextMenu {
+                                                    Button(role: .destructive) {
+                                                        deleteEntry(entry)
+                                                    } label: {
+                                                        Label("Delete", systemImage: "trash")
+                                                    }
+                                                }
                                         }
                                     }
+                                }
                             }
+                            .padding(.horizontal, Theme.Spacing.base)
+                            .padding(.vertical, 6)
                         }
-                        .padding(.horizontal, Theme.Spacing.base)
-                        .padding(.vertical, 6)
                     }
                     .frame(maxWidth: 1100)
                     // The scroll view's own pan recognizer competes with the inline wheel's
