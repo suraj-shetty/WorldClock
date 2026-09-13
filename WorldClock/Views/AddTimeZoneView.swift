@@ -12,34 +12,99 @@ struct AddTimeZoneView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List(filteredOptions) { option in
-                Button {
-                    onSelect(option.identifier, option.label)
-                    dismiss()
-                } label: {
-                    Text(option.label)
-                        .foregroundStyle(.primary)
-                }
-            }
-            .searchable(text: $searchText, prompt: "Search timezones")
-            .navigationTitle(title)
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+        ZStack {
+            Theme.ground.ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                header
+                searchField
+
+                ScrollView {
+                    LazyVStack(spacing: 10) {
+                        ForEach(filteredOptions) { option in
+                            Button {
+                                onSelect(option.identifier, option.label)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    Text(option.label)
+                                        .font(.system(size: 17, weight: .medium))
+                                        .foregroundStyle(Theme.textBright)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 15)
+                                .padding(.vertical, 14)
+                                .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.48)))
+                                .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.text.opacity(0.13), lineWidth: 1))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, Theme.Spacing.base)
+                    .padding(.bottom, Theme.Spacing.lg)
                 }
             }
         }
         #if os(macOS)
         // macOS sizes a .sheet to its content's ideal size rather than filling the
-        // window like iOS does — without an explicit frame here, the List inside
-        // gets no definite height and silently collapses to zero (its rows still
-        // exist, just with a 0pt-tall scroll area, so nothing is visible).
+        // window like iOS does — without an explicit frame here, the content
+        // gets no definite height and silently collapses to zero.
         .frame(minWidth: 420, idealWidth: 480, minHeight: 480, idealHeight: 560)
         #endif
+    }
+
+    private var header: some View {
+        HStack {
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(Theme.accentText)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(Theme.glass.opacity(0.5)))
+                    .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+
+            Text(title)
+                .font(.system(size: 22, weight: .medium))
+                .tracking(-0.4)
+                .foregroundStyle(Theme.text)
+
+            Spacer()
+        }
+        .padding(.horizontal, Theme.Spacing.base)
+        .padding(.top, 12)
+    }
+
+    private var searchField: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Theme.text.opacity(0.5))
+            TextField("", text: $searchText, prompt: Text("Search timezones").foregroundStyle(Theme.text.opacity(0.4)))
+                .foregroundStyle(Theme.textBright)
+                .tint(Theme.accent)
+            #if os(iOS)
+                .textInputAutocapitalization(.words)
+                .autocorrectionDisabled()
+            #endif
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Theme.text.opacity(0.4))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.5)))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.text.opacity(0.13), lineWidth: 1))
+        .padding(.horizontal, Theme.Spacing.base)
     }
 }
 

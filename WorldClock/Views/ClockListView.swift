@@ -69,11 +69,15 @@ struct ClockListView: View {
                                 ClockRow(
                                     entry: entry, now: now, use24Hour: use24Hour,
                                     showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
-                                    homeTimeZone: homeTimeZone, viewModel: viewModel
+                                    homeTimeZone: homeTimeZone,
+                                    onDelete: { modelContext.delete(entry) },
+                                    viewModel: viewModel
                                 )
                                     // A swipe-to-delete action would install a horizontal drag
                                     // recognizer on the row that fights the wheel's own horizontal
-                                    // drag when this row is expanded — long-press avoids the conflict.
+                                    // drag when this row is expanded — long-press works from a
+                                    // collapsed row; the visible "Delete City" button covers the
+                                    // expanded state where the wheel is already using that drag.
                                     .contextMenu {
                                         Button(role: .destructive) {
                                             modelContext.delete(entry)
@@ -175,6 +179,7 @@ private struct ClockRow: View {
     var showCountryName: Bool
     var flagNextDayCities: Bool
     var homeTimeZone: TimeZone
+    var onDelete: () -> Void
     @Bindable var viewModel: ClockBoardViewModel
 
     private var isSelected: Bool { viewModel.selectedEntryID == entry.id }
@@ -254,6 +259,18 @@ private struct ClockRow: View {
                 // Fades in/out in place rather than sliding or scaling — combined with
                 // top-aligning the row below, the button/time text never shifts; only
                 // the space beneath it grows or shrinks.
+                .transition(.opacity)
+
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("Delete City", systemImage: "trash")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color(hex: 0xff8a80))
+                .padding(.top, 14)
+                .frame(maxWidth: .infinity, alignment: .trailing)
                 .transition(.opacity)
             }
         }
