@@ -1,0 +1,5 @@
+<resources>
+    <!-- Platform theme only, as a splash/launch background — Compose's own MaterialTheme
+         (dark colors, set in MainActivity) is what the UI actually renders with. -->
+    <style name="Theme.WorldClock" parent="android:Theme.Material.NoActionBar" />
+</resources>
