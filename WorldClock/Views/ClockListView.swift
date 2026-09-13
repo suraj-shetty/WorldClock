@@ -52,6 +52,9 @@ struct ClockListView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
+                // Capped and centered rather than stretched edge-to-edge — on an iPad
+                // or a wide Mac window, full-width rows would read as absurdly long
+                // thin bars. The sky background above stays full-bleed regardless.
                 VStack(spacing: 0) {
                     header
 
@@ -114,6 +117,7 @@ struct ClockListView: View {
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
+                .frame(maxWidth: 700)
             }
         }
         .sheet(isPresented: $showingAddSheet) {
