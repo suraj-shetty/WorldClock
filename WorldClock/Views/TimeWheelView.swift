@@ -15,7 +15,8 @@ struct TimeWheelView: View {
     @Binding var offset: TimeInterval
 
     private let pixelsPerMinute: CGFloat = 1.5
-    private let snapMinutes: TimeInterval = 15
+    @AppStorage("snapMinutes") private var snapMinutesSetting = 15
+    private var snapMinutes: TimeInterval { TimeInterval(snapMinutesSetting) }
     private let limit: TimeInterval = 48 * 3600
 
     @State private var dragStartOffset: TimeInterval?

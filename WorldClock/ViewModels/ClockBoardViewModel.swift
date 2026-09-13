@@ -42,10 +42,14 @@ final class ClockBoardViewModel {
 
     /// Fractional hour-of-day (0..<24) in the active anchor's timezone, at `now + offset`.
     /// Feeds BackgroundView, which keys the sky/sun/stars off this single value.
-    func activeAnchorHour(entries: [ClockEntry], now: Date) -> Double {
+    func activeAnchorHour(entries: [ClockEntry], now: Date, homeTimeZone: TimeZone = .current) -> Double {
+        ClockBoardViewModel.hourOfDay(in: anchorTimeZone(entries: entries, deviceTimeZone: homeTimeZone), at: displayDate(now: now))
+    }
+
+    static func hourOfDay(in timeZone: TimeZone, at date: Date) -> Double {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = anchorTimeZone(entries: entries)
-        let comps = calendar.dateComponents([.hour, .minute], from: displayDate(now: now))
+        calendar.timeZone = timeZone
+        let comps = calendar.dateComponents([.hour, .minute], from: date)
         return Double(comps.hour ?? 0) + Double(comps.minute ?? 0) / 60
     }
 }

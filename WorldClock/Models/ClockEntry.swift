@@ -23,9 +23,15 @@ final class ClockEntry {
     /// the lookup table below (e.g. `Etc/UTC`, uninhabited Antarctica stations) — the
     /// row just falls back to showing the UTC-offset delta alone.
     var country: (name: String, flag: String)? {
-        guard let code = ClockEntry.countryCodesByTimeZone[timeZoneIdentifier],
+        ClockEntry.lookupCountry(for: timeZoneIdentifier)
+    }
+
+    /// Same lookup as `country`, usable for a timezone identifier that isn't backed by
+    /// a saved `ClockEntry` (the Settings screen's home-timezone picker).
+    static func lookupCountry(for identifier: String) -> (name: String, flag: String)? {
+        guard let code = countryCodesByTimeZone[identifier],
               let name = Locale.current.localizedString(forRegionCode: code) else { return nil }
-        return (name, ClockEntry.flagEmoji(countryCode: code))
+        return (name, flagEmoji(countryCode: code))
     }
 
     private static func flagEmoji(countryCode: String) -> String {

@@ -3,7 +3,8 @@ import SwiftUI
 struct AddTimeZoneView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
-    var onAdd: (_ identifier: String, _ label: String) -> Void
+    var title: String = "Add City"
+    var onSelect: (_ identifier: String, _ label: String) -> Void
 
     private var filteredIdentifiers: [String] {
         let all = TimeZone.knownTimeZoneIdentifiers.sorted()
@@ -15,7 +16,7 @@ struct AddTimeZoneView: View {
         NavigationStack {
             List(filteredIdentifiers, id: \.self) { identifier in
                 Button {
-                    onAdd(identifier, displayLabel(for: identifier))
+                    onSelect(identifier, displayLabel(for: identifier))
                     dismiss()
                 } label: {
                     Text(displayLabel(for: identifier))
@@ -23,7 +24,7 @@ struct AddTimeZoneView: View {
                 }
             }
             .searchable(text: $searchText, prompt: "Search timezones")
-            .navigationTitle("Add City")
+            .navigationTitle(title)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif

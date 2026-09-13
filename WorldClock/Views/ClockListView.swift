@@ -15,13 +15,27 @@ struct ClockListView: View {
     @State private var showingAddSheet = false
     @State private var showingSettings = false
     @AppStorage("use24Hour") private var use24Hour = false
+    @AppStorage("showCountryName") private var showCountryName = true
+    @AppStorage("animateSky") private var animateSky = true
+    @AppStorage("flagNextDayCities") private var flagNextDayCities = false
+    @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
+
+    private var homeTimeZone: TimeZone {
+        homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
+    }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let now = timeline.date
+            // "Animate the sky" off means the illustration always reflects the real
+            // current moment at home, ignoring the wheel's scrub offset/selection —
+            // everything else (rows, wheel) still scrubs normally.
+            let skyHour = animateSky
+                ? viewModel.activeAnchorHour(entries: entries, now: now, homeTimeZone: homeTimeZone)
+                : ClockBoardViewModel.hourOfDay(in: homeTimeZone, at: now)
 
             ZStack(alignment: .bottom) {
-                BackgroundView(hour: viewModel.activeAnchorHour(entries: entries, now: now))
+                BackgroundView(hour: skyHour)
 
                 // Top scrim so the header text stays legible over a bright sky.
                 LinearGradient(
@@ -52,7 +66,11 @@ struct ClockListView: View {
                     ScrollView {
                         LazyVStack(spacing: 10) {
                             ForEach(entries) { entry in
-                                ClockRow(entry: entry, now: now, use24Hour: use24Hour, viewModel: viewModel)
+                                ClockRow(
+                                    entry: entry, now: now, use24Hour: use24Hour,
+                                    showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
+                                    homeTimeZone: homeTimeZone, viewModel: viewModel
+                                )
                                     // A swipe-to-delete action would install a horizontal drag
                                     // recognizer on the row that fights the wheel's own horizontal
                                     // drag when this row is expanded — long-press avoids the conflict.
@@ -81,7 +99,7 @@ struct ClockListView: View {
                     if viewModel.selectedEntryID == nil {
                         TimeWheelView(
                             anchorNow: now,
-                            anchorTimeZone: .current,
+                            anchorTimeZone: homeTimeZone,
                             use24Hour: use24Hour,
                             style: .bottom,
                             offset: $viewModel.offset
@@ -100,12 +118,12 @@ struct ClockListView: View {
             }
         }
         .sheet(isPresented: $showingSettings) {
-            SettingsView(use24Hour: $use24Hour)
+            SettingsView()
         }
     }
 
     private var homeKicker: String {
-        let name = TimeZone.current.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? TimeZone.current.identifier
+        let name = homeTimeZone.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? homeTimeZone.identifier
         return "\(name.uppercased()) · YOUR TIME"
     }
 
@@ -154,6 +172,9 @@ private struct ClockRow: View {
     var entry: ClockEntry
     var now: Date
     var use24Hour: Bool
+    var showCountryName: Bool
+    var flagNextDayCities: Bool
+    var homeTimeZone: TimeZone
     @Bindable var viewModel: ClockBoardViewModel
 
     private var isSelected: Bool { viewModel.selectedEntryID == entry.id }
@@ -182,7 +203,7 @@ private struct ClockRow: View {
                                 .lineLimit(1)
                         }
                         Text(subtitle)
-                            .font(.system(size: 11.5))
+                            .font(.system(size: 14, weight: .medium))
                             .tracking(0.23)
                             .foregroundStyle(Theme.text.opacity(isSelected ? 0.62 : 0.6))
                             .monospacedDigit()
@@ -267,9 +288,9 @@ private struct ClockRow: View {
     }
 
     private var deltaLabel: String {
-        let deviceOffset = TimeZone.current.secondsFromGMT(for: displayedDate)
+        let homeOffset = homeTimeZone.secondsFromGMT(for: displayedDate)
         let entryOffset = entry.timeZone.secondsFromGMT(for: displayedDate)
-        let diffMinutes = (entryOffset - deviceOffset) / 60
+        let diffMinutes = (entryOffset - homeOffset) / 60
         if diffMinutes == 0 { return "Home" }
         let sign = diffMinutes > 0 ? "+" : "\u{2212}"
         let magnitude = abs(diffMinutes)
@@ -277,8 +298,26 @@ private struct ClockRow: View {
         return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(minutes * 10 / 60)h"
     }
 
+    /// True when the entry's local calendar date (at the displayed moment) is a day
+    /// ahead of home's — e.g. it's still today at home but already tomorrow there.
+    private var isNextDay: Bool {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = homeTimeZone
+        let homeDay = calendar.startOfDay(for: displayedDate)
+        calendar.timeZone = entry.timeZone
+        let entryDay = calendar.startOfDay(for: displayedDate)
+        return entryDay > homeDay
+    }
+
     private var subtitle: String {
-        guard let country = entry.country else { return deltaLabel }
-        return "\(country.flag) \(country.name) · \(deltaLabel)"
+        var parts: [String] = []
+        if showCountryName, let country = entry.country {
+            parts.append("\(country.flag) \(country.name)")
+        }
+        parts.append(deltaLabel)
+        if flagNextDayCities && isNextDay {
+            parts.append("Next day")
+        }
+        return parts.joined(separator: " · ")
     }
 }
