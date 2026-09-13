@@ -88,7 +88,6 @@ fun TimeWheel(
 ) {
     val density = LocalDensity.current
     val pixelsPerMinute = with(density) { 1.5.dp.toPx() }
-    val limitSeconds = 48 * 3600.0
     val scope = rememberCoroutineScope()
     val metrics = if (style == WheelStyle.Bottom) WheelMetrics.bottom else WheelMetrics.inline
     val canvasHeight = if (style == WheelStyle.Bottom) 56.dp else 52.dp
@@ -132,18 +131,19 @@ fun TimeWheel(
                                 velocityTracker.addPosition(change.uptimeMillis, change.position)
                                 accumulatedDx.floatValue += dragAmount.x
                                 val raw = dragStartOffset.floatValue - (accumulatedDx.floatValue / pixelsPerMinute) * 60
-                                onOffsetChange(raw.toDouble().coerceIn(-limitSeconds, limitSeconds))
+                                onOffsetChange(raw.toDouble())
                             },
                             onDragEnd = {
                                 val velocity = velocityTracker.calculateVelocity()
                                 val flingSeconds = 0.3
                                 // A flick's velocity projects a bit of extra glide before it
-                                // settles — clamped well below the wheel's full 48h range so a
-                                // fast flick can't coast absurdly far.
+                                // settles — the drag itself is unbounded (scrub as many days
+                                // forward/back as you like), but the glide is still capped so a
+                                // fast flick can't coast absurdly far past where the finger let go.
                                 val projectedDelta = -(velocity.x / pixelsPerMinute) * 60 * flingSeconds
                                 val maxGlide = 6 * 3600.0
                                 val clampedGlide = projectedDelta.toDouble().coerceIn(-maxGlide, maxGlide)
-                                val target = (currentOffset.value + clampedGlide).coerceIn(-limitSeconds, limitSeconds)
+                                val target = currentOffset.value + clampedGlide
                                 val snap = snapMinutes * 60.0
                                 val snapped = (target / snap).roundToLong() * snap
                                 animateTo(snapped)

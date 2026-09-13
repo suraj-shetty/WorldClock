@@ -85,7 +85,12 @@ fun BoardScreen(
             )
 
             if (viewModel.entries.isEmpty()) {
-                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                // Same weight(1f) the grid below gets — without it this Box only
+                // takes its own content height, so the wheel below ends up right
+                // under the empty-state text near the top instead of pinned to
+                // the bottom of the screen like it is once there's a grid to fill
+                // the remaining space.
+                Box(modifier = Modifier.weight(1f).fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     BasicText("Tap + to add a city", style = TextStyle(color = Theme.text.copy(alpha = 0.6f), fontSize = 15.sp))
                 }
             } else {

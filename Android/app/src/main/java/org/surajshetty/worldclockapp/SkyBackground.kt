@@ -109,15 +109,21 @@ private fun DrawScope.drawForeground(h: Double) {
     val ht = size.height
     val scaleF = min(w, ht) / 390f
 
-    // Sun rides 5:40->19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20->6:20,
-    // continuous across midnight via `hh`.
+    // Sun rides 5:40->19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20->6:20.
     val sunT = clamp01((h - 6) / 12)
     val sunUp = sin(sunT * Math.PI)
     val sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
-    val hh = if (h < 12) h + 24 else h
-    val moonT = clamp01((hh - 18) / 12)
+    // Hours since the moon's 18:00 "rise" reference, wrapping every 24h — the
+    // wrap lands exactly at 18:00, where moonO is already 0 on both sides of it,
+    // so it never shows. A naive `h < 12 ? h + 24 : h` (this file's first draft)
+    // instead wraps at *noon*, deep in broad daylight — any transition between a
+    // daytime and a nighttime city crosses that point, so the moon's invisible
+    // resting position would teleport across the sky mid-transition and the tail
+    // end of that teleport could still be visible once its opacity ramped back up.
+    val hoursSinceMoonrise = ((h - 18) % 24 + 24) % 24
+    val moonT = clamp01(hoursSinceMoonrise / 12)
     val moonUp = sin(moonT * Math.PI)
-    val moonO = min(ramp(hh, 18.4, 20.2), 1 - ramp(hh, 27.4, 29.0))
+    val moonO = min(ramp(hoursSinceMoonrise, 0.4, 2.2), 1 - ramp(hoursSinceMoonrise, 9.4, 11.0))
 
     val sunHi = Color(0xFFFFFAF0)
     val sunBody = lerpColor(Color(0xFFF6D9B4), Color(0xFFF9F2E0), sunUp)
