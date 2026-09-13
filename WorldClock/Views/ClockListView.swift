@@ -322,7 +322,10 @@ private struct ClockRow: View {
         let sign = diffMinutes > 0 ? "+" : "\u{2212}"
         let magnitude = abs(diffMinutes)
         let hours = magnitude / 60, minutes = magnitude % 60
-        return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(minutes * 10 / 60)h"
+        // Rounded, not truncated: minutes=45 is 0.75h, which rounds to ".8h" — integer
+        // division here previously truncated that to ".7h".
+        let tenths = Int((Double(minutes) / 6).rounded())
+        return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(tenths)h"
     }
 
     /// True when the entry's local calendar date (at the displayed moment) is a day

@@ -157,119 +157,166 @@ private func ridgePath(_ points: [(x: Double, y: Double)], in rect: CGRect) -> P
 
 /// Full-bleed sky background keyed to `hour` (0..<24, fractional, in whichever
 /// timezone is the active anchor). Feed it `ClockBoardViewModel.activeAnchorHour(...)`.
+///
+/// Split into three layers instead of one Canvas because only the star field's
+/// twinkle needs continuous ticking. Everything else — the gradient, sun/moon glow,
+/// clouds, and terrain with several expensive blur passes — is a pure function of
+/// `hour`, which changes at most once a second (or continuously while the wheel is
+/// actively being dragged, when redrawing is exactly what's wanted). Driving all of
+/// that off the same fast timer as the stars meant redrawing the whole expensive
+/// scene many times a second for no visual benefit.
 struct BackgroundView: View {
     var hour: Double
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            Canvas { context, size in
-                drawSky(context: &context, size: size, elapsed: timeline.date.timeIntervalSinceReferenceDate)
-            }
+        ZStack {
+            SkyGradientLayer(hour: hour)
+            SkyStarLayer(hour: hour)
+            SkyForegroundLayer(hour: hour)
         }
         .ignoresSafeArea()
         .animation(.easeInOut(duration: 0.3), value: hour)
     }
+}
 
-    private func drawSky(context: inout GraphicsContext, size: CGSize, elapsed: TimeInterval) {
-        let raw = hour.truncatingRemainder(dividingBy: 24)
-        let h = raw < 0 ? raw + 24 : raw
-        let p = skyPalette(forHour: h)
-        let w = size.width, ht = size.height
-        let scale = min(w, ht) / 390
+/// Layer 1: the base 4-stop gradient. Cheap even redrawn often, but only actually
+/// redraws when `hour` changes — no timer.
+private struct SkyGradientLayer: View {
+    var hour: Double
 
-        // 1. Base gradient — 4 stops at 0/30/62/100%.
-        context.fill(
-            Path(CGRect(origin: .zero, size: size)),
-            with: .linearGradient(
-                Gradient(stops: [
-                    .init(color: p.top, location: 0),
-                    .init(color: p.up, location: 0.30),
-                    .init(color: p.mid, location: 0.62),
-                    .init(color: p.hz, location: 1.0),
-                ]),
-                startPoint: .zero, endPoint: CGPoint(x: 0, y: ht)
+    var body: some View {
+        Canvas { context, size in
+            let p = skyPalette(forHour: normalizedHour(hour))
+            context.fill(
+                Path(CGRect(origin: .zero, size: size)),
+                with: .linearGradient(
+                    Gradient(stops: [
+                        .init(color: p.top, location: 0),
+                        .init(color: p.up, location: 0.30),
+                        .init(color: p.mid, location: 0.62),
+                        .init(color: p.hz, location: 1.0),
+                    ]),
+                    startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)
+                )
             )
-        )
+        }
+    }
+}
 
-        // 2. Star field.
-        if p.star > 0.01 {
-            for star in skyStars {
-                let twinkle = (sin(elapsed * (2 * .pi / star.dur) + star.delay) + 1) / 2
-                context.opacity = star.baseBrightness * p.star * (0.35 + 0.65 * twinkle)
-                let point = CGPoint(x: star.x / 100 * w, y: star.y / 100 * ht)
-                let d = star.d * scale
-                context.fill(Path(ellipseIn: CGRect(x: point.x - d / 2, y: point.y - d / 2, width: d, height: d)), with: .color(Color(hex: 0xf3f5fe)))
+/// Layer 2: just the twinkling stars — the only part of the sky that needs
+/// continuous motion. Small, blur-free draws, so ticking this fast is cheap.
+private struct SkyStarLayer: View {
+    var hour: Double
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 0.1)) { timeline in
+            Canvas { context, size in
+                let p = skyPalette(forHour: normalizedHour(hour))
+                guard p.star > 0.01 else { return }
+                let scale = min(size.width, size.height) / 390
+                let elapsed = timeline.date.timeIntervalSinceReferenceDate
+                for star in skyStars {
+                    let twinkle = (sin(elapsed * (2 * .pi / star.dur) + star.delay) + 1) / 2
+                    context.opacity = star.baseBrightness * p.star * (0.35 + 0.65 * twinkle)
+                    let point = CGPoint(x: star.x / 100 * size.width, y: star.y / 100 * size.height)
+                    let d = star.d * scale
+                    context.fill(Path(ellipseIn: CGRect(x: point.x - d / 2, y: point.y - d / 2, width: d, height: d)), with: .color(Color(hex: 0xf3f5fe)))
+                }
+                context.opacity = 1
             }
-            context.opacity = 1
         }
+    }
+}
 
-        // Sun rides 5:40→19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20→6:20,
-        // continuous across midnight via `hh`.
-        let sunT = clamp01((h - 6) / 12)
-        let sunUp = sin(sunT * .pi)
-        let sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
-        let hh = h < 12 ? h + 24 : h
-        let moonT = clamp01((hh - 18) / 12)
-        let moonUp = sin(moonT * .pi)
-        let moonO = min(ramp(hh, 18.4, 20.2), 1 - ramp(hh, 27.4, 29.0))
+/// Layer 3: sun/moon glow, clouds, haze, and terrain — everything with the
+/// expensive blur passes. No timer: redraws only when `hour` changes.
+private struct SkyForegroundLayer: View {
+    var hour: Double
 
-        let sunHi = Color(hex: 0xfffaf0)
-        let sunBody = lerp(Color(hex: 0xf6d9b4), Color(hex: 0xf9f2e0), sunUp)
-        let sunEdge = lerp(Color(hex: 0xe5a274), Color(hex: 0xf2e2c0), sunUp)
-        let sunX = 10 + sunT * 80, sunY = 80 - sunUp * 68
-        let sunW = 7 + (1 - sunUp) * 6.5
-
-        let moonHi = Color(hex: 0xf7f6ff)
-        let moonBody = Color(hex: 0xdcd9f0)
-        let moonEdge = Color(hex: 0xa9a3c9)
-        let moonX = 10 + moonT * 80, moonY = 80 - moonUp * 66
-        let moonW = 5.4 + (1 - moonUp) * 2.6
-
-        // 3. Blooms — horizon bloom first, then the soft halos riding with each disc.
-        drawBloom(&context, size: size, x: 50, y: 104, wPercent: 190, color: p.hz, colorOpacity: 0.7, opacity: 0.5)
-        if sunO > 0.01 {
-            drawBloom(&context, size: size, x: sunX, y: sunY + 3, wPercent: 130,
-                      color: lerp(Color(hex: 0xe08f63), Color(hex: 0xf4e8cc), sunUp), colorOpacity: 0.55,
-                      opacity: sunO * (0.34 + (1 - sunUp) * 0.3))
+    var body: some View {
+        Canvas { context, size in
+            drawForeground(context: &context, size: size, hour: normalizedHour(hour))
         }
-        if moonO > 0.01 {
-            drawBloom(&context, size: size, x: moonX, y: moonY, wPercent: 70, color: skyAccent, colorOpacity: 0.5, opacity: moonO * 0.28)
-        }
+    }
+}
 
-        // 4. Sun / moon discs, each with its own tight glow.
-        drawDisc(&context, size: size, x: sunX, y: sunY, wPercent: sunW, opacity: sunO,
-                 highlight: sunHi, body: sunBody, edge: sunEdge,
-                 glowColor: lerp(Color(hex: 0xe08f63), Color(hex: 0xf6e6c4), sunUp), glowOpacity: 0.30 + (1 - sunUp) * 0.22,
-                 glowBlur: (52 + (1 - sunUp) * 68) * scale, glowSpread: (8 + (1 - sunUp) * 16) * scale)
-        drawDisc(&context, size: size, x: moonX, y: moonY, wPercent: moonW, opacity: moonO,
-                 highlight: moonHi, body: moonBody, edge: moonEdge,
-                 glowColor: skyAccent, glowOpacity: 0.34, glowBlur: 46 * scale, glowSpread: 6 * scale)
+private func normalizedHour(_ hour: Double) -> Double {
+    let raw = hour.truncatingRemainder(dividingBy: 24)
+    return raw < 0 ? raw + 24 : raw
+}
 
-        // 5. Clouds, tinted warm toward the sun's highlight as it rises.
-        let lightC = lerp(p.cloudTint, sunHi, sunO * 0.35 * sunUp)
-        for cloud in skyCloudBases {
-            drawCloud(&context, size: size, x: cloud.x, y: cloud.y, wPercent: cloud.w, hPercent: cloud.h,
-                      blur: cloud.blur * scale, opacity: p.cloudAlpha * cloud.o, color: lightC)
-        }
+private func drawForeground(context: inout GraphicsContext, size: CGSize, hour h: Double) {
+    let p = skyPalette(forHour: h)
+    let w = size.width, ht = size.height
+    let scale = min(w, ht) / 390
 
-        // 6. Atmospheric haze — bottom 34%.
-        let hazeRect = CGRect(x: 0, y: ht * 0.66, width: w, height: ht * 0.34)
-        context.fill(Path(hazeRect), with: .linearGradient(
-            Gradient(stops: [
-                .init(color: p.haze.opacity(0), location: 0),
-                .init(color: p.haze.opacity(0.3), location: 0.55),
-                .init(color: p.haze.opacity(0.62), location: 1),
-            ]),
-            startPoint: CGPoint(x: 0, y: hazeRect.minY), endPoint: CGPoint(x: 0, y: hazeRect.maxY)
-        ))
+    // Sun rides 5:40→19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20→6:20,
+    // continuous across midnight via `hh`.
+    let sunT = clamp01((h - 6) / 12)
+    let sunUp = sin(sunT * .pi)
+    let sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
+    let hh = h < 12 ? h + 24 : h
+    let moonT = clamp01((hh - 18) / 12)
+    let moonUp = sin(moonT * .pi)
+    let moonO = min(ramp(hh, 18.4, 20.2), 1 - ramp(hh, 27.4, 29.0))
 
-        // 7. Terrain — mountain ridges, ground, lake with reflection, mist.
-        let lit = max(sunO * sunUp, moonO * moonUp * 0.45)
-        let domX = sunO >= moonO ? sunX : moonX
-        drawTerrain(&context, size: size, palette: p, lit: lit, sunColor: sunBody, moonColor: moonBody, sunO: sunO, moonO: moonO, domX: domX, scale: scale)
+    let sunHi = Color(hex: 0xfffaf0)
+    let sunBody = lerp(Color(hex: 0xf6d9b4), Color(hex: 0xf9f2e0), sunUp)
+    let sunEdge = lerp(Color(hex: 0xe5a274), Color(hex: 0xf2e2c0), sunUp)
+    let sunX = 10 + sunT * 80, sunY = 80 - sunUp * 68
+    let sunW = 7 + (1 - sunUp) * 6.5
+
+    let moonHi = Color(hex: 0xf7f6ff)
+    let moonBody = Color(hex: 0xdcd9f0)
+    let moonEdge = Color(hex: 0xa9a3c9)
+    let moonX = 10 + moonT * 80, moonY = 80 - moonUp * 66
+    let moonW = 5.4 + (1 - moonUp) * 2.6
+
+    // 3. Blooms — horizon bloom first, then the soft halos riding with each disc.
+    drawBloom(&context, size: size, x: 50, y: 104, wPercent: 190, color: p.hz, colorOpacity: 0.7, opacity: 0.5)
+    if sunO > 0.01 {
+        drawBloom(&context, size: size, x: sunX, y: sunY + 3, wPercent: 130,
+                  color: lerp(Color(hex: 0xe08f63), Color(hex: 0xf4e8cc), sunUp), colorOpacity: 0.55,
+                  opacity: sunO * (0.34 + (1 - sunUp) * 0.3))
+    }
+    if moonO > 0.01 {
+        drawBloom(&context, size: size, x: moonX, y: moonY, wPercent: 70, color: skyAccent, colorOpacity: 0.5, opacity: moonO * 0.28)
     }
 
-    private func drawBloom(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, color: Color, colorOpacity: Double, opacity: Double) {
+    // 4. Sun / moon discs, each with its own tight glow.
+    drawDisc(&context, size: size, x: sunX, y: sunY, wPercent: sunW, opacity: sunO,
+             highlight: sunHi, body: sunBody, edge: sunEdge,
+             glowColor: lerp(Color(hex: 0xe08f63), Color(hex: 0xf6e6c4), sunUp), glowOpacity: 0.30 + (1 - sunUp) * 0.22,
+             glowBlur: (52 + (1 - sunUp) * 68) * scale, glowSpread: (8 + (1 - sunUp) * 16) * scale)
+    drawDisc(&context, size: size, x: moonX, y: moonY, wPercent: moonW, opacity: moonO,
+             highlight: moonHi, body: moonBody, edge: moonEdge,
+             glowColor: skyAccent, glowOpacity: 0.34, glowBlur: 46 * scale, glowSpread: 6 * scale)
+
+    // 5. Clouds, tinted warm toward the sun's highlight as it rises.
+    let lightC = lerp(p.cloudTint, sunHi, sunO * 0.35 * sunUp)
+    for cloud in skyCloudBases {
+        drawCloud(&context, size: size, x: cloud.x, y: cloud.y, wPercent: cloud.w, hPercent: cloud.h,
+                  blur: cloud.blur * scale, opacity: p.cloudAlpha * cloud.o, color: lightC)
+    }
+
+    // 6. Atmospheric haze — bottom 34%.
+    let hazeRect = CGRect(x: 0, y: ht * 0.66, width: w, height: ht * 0.34)
+    context.fill(Path(hazeRect), with: .linearGradient(
+        Gradient(stops: [
+            .init(color: p.haze.opacity(0), location: 0),
+            .init(color: p.haze.opacity(0.3), location: 0.55),
+            .init(color: p.haze.opacity(0.62), location: 1),
+        ]),
+        startPoint: CGPoint(x: 0, y: hazeRect.minY), endPoint: CGPoint(x: 0, y: hazeRect.maxY)
+    ))
+
+    // 7. Terrain — mountain ridges, ground, lake with reflection, mist.
+    let lit = max(sunO * sunUp, moonO * moonUp * 0.45)
+    let domX = sunO >= moonO ? sunX : moonX
+    drawTerrain(&context, size: size, palette: p, lit: lit, sunColor: sunBody, moonColor: moonBody, sunO: sunO, moonO: moonO, domX: domX, scale: scale)
+}
+
+private func drawBloom(_ context: inout GraphicsContext, size: CGSize, x: Double, y: Double, wPercent: Double, color: Color, colorOpacity: Double, opacity: Double) {
         guard opacity > 0.005 else { return }
         let d = wPercent / 100 * size.width
         let rect = CGRect(x: x / 100 * size.width - d / 2, y: y / 100 * size.height - d / 2, width: d, height: d)
@@ -470,4 +517,4 @@ struct BackgroundView: View {
             startPoint: CGPoint(x: 0, y: mistRect.maxY), endPoint: CGPoint(x: 0, y: mistRect.minY)
         ))
     }
-}
+

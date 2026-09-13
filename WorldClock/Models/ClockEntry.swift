@@ -1,6 +1,27 @@
 import Foundation
 import SwiftData
 
+/// Shared by `ClockEntry.timeZone` and the timezone picker's rows (`AddTimeZoneView`).
+/// `TimeZone(identifier:)` goes through Foundation's lookup path and the result never
+/// changes for a given identifier, so it's cached rather than reconstructed on every
+/// SwiftUI body evaluation — previously each of those two call sites kept its own
+/// separate, uncached copy of this same construction.
+///
+/// Not synchronized: every reader/writer in this app is a SwiftUI view body, i.e. the
+/// main thread, which is the only context `ClockEntry` and this cache are ever touched
+/// from today. If a background import/export path or a strict-concurrency build ever
+/// touches this off the main thread, it needs a lock or `@MainActor` isolation first.
+enum TimeZoneResolver {
+    private static var cache: [String: TimeZone] = [:]
+
+    static func resolve(_ identifier: String) -> TimeZone {
+        if let cached = cache[identifier] { return cached }
+        let zone = TimeZone(identifier: identifier) ?? .current
+        cache[identifier] = zone
+        return zone
+    }
+}
+
 @Model
 final class ClockEntry {
     var id: UUID
@@ -15,8 +36,10 @@ final class ClockEntry {
         self.sortOrder = sortOrder
     }
 
+    /// Memoized — see `TimeZoneResolver`. Read several times per row (time, offset,
+    /// next-day check) on every clock tick.
     var timeZone: TimeZone {
-        TimeZone(identifier: timeZoneIdentifier) ?? .current
+        TimeZoneResolver.resolve(timeZoneIdentifier)
     }
 
     /// Localized country name + flag for the row subtitle. `nil` for identifiers not in
@@ -28,11 +51,25 @@ final class ClockEntry {
 
     /// Same lookup as `country`, usable for a timezone identifier that isn't backed by
     /// a saved `ClockEntry` (the Settings screen's home-timezone picker).
+    ///
+    /// Memoized: this is read from every visible row's body on every clock tick (once
+    /// a second for the main list), and the result never changes for a given
+    /// identifier — recomputing the dictionary lookup, `Locale` call, and flag-emoji
+    /// construction that often was pure waste.
     static func lookupCountry(for identifier: String) -> (name: String, flag: String)? {
+        if let cached = countryCache[identifier] { return cached }
         guard let code = countryCodesByTimeZone[identifier],
-              let name = Locale.current.localizedString(forRegionCode: code) else { return nil }
-        return (name, flagEmoji(countryCode: code))
+              let name = Locale.current.localizedString(forRegionCode: code) else {
+            countryCache[identifier] = .some(nil)
+            return nil
+        }
+        let result = (name, flagEmoji(countryCode: code))
+        countryCache[identifier] = result
+        return result
     }
+
+    // Not synchronized — same main-thread-only assumption as `TimeZoneResolver` above.
+    private static var countryCache: [String: (name: String, flag: String)?] = [:]
 
     private static func flagEmoji(countryCode: String) -> String {
         let base: UInt32 = 127397 // 0x1F1E6 ('A' flag letter) - 65 ('A')
