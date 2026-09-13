@@ -136,7 +136,12 @@ struct ClockListView: View {
                             .padding(.vertical, 6)
                         }
                     }
-                    .frame(maxWidth: 1100)
+                    // No maxWidth cap here (unlike the header/wheel's 700pt reading-width
+                    // cap): columns are already bounded to ~330-plus-flex each by
+                    // columnCount(for:), so on a wide iPad landscape or Mac window the
+                    // extra space goes into more/wider columns instead of being wasted
+                    // as a capped, centered island.
+                    //
                     // The scroll view's own pan recognizer competes with the inline wheel's
                     // horizontal drag even with `.simultaneousGesture` — disabling scroll
                     // while a row is selected removes that conflict. Only one row's wheel is
