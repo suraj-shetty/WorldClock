@@ -181,8 +181,17 @@ struct BackgroundView: View {
 
 /// Layer 1: the base 4-stop gradient. Cheap even redrawn often, but only actually
 /// redraws when `hour` changes — no timer.
-private struct SkyGradientLayer: View {
+private struct SkyGradientLayer: View, Animatable {
     var hour: Double
+
+    // A plain Canvas has no state for SwiftUI to interpolate — without this, changing
+    // `hour` (tapping a city, deselecting) snaps straight to the new sky instead of
+    // easing through it. Animatable's `animatableData` makes SwiftUI drive `hour`
+    // through the intermediate values itself, redrawing the Canvas each frame.
+    var animatableData: Double {
+        get { hour }
+        set { hour = newValue }
+    }
 
     var body: some View {
         Canvas { context, size in
@@ -230,8 +239,16 @@ private struct SkyStarLayer: View {
 
 /// Layer 3: sun/moon glow, clouds, haze, and terrain — everything with the
 /// expensive blur passes. No timer: redraws only when `hour` changes.
-private struct SkyForegroundLayer: View {
+private struct SkyForegroundLayer: View, Animatable {
     var hour: Double
+
+    // See SkyGradientLayer.animatableData — same reasoning, and this is the layer
+    // where the sun/moon position and terrain lighting actually live, so it's the
+    // one that most needs to ease rather than snap.
+    var animatableData: Double {
+        get { hour }
+        set { hour = newValue }
+    }
 
     var body: some View {
         Canvas { context, size in
