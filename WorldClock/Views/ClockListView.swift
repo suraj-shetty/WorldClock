@@ -24,6 +24,15 @@ struct ClockListView: View {
         homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
     }
 
+    /// One flexible column while a row is selected (see the comment at the grid's call
+    /// site for why), otherwise as many ~340pt columns as fit — 1 on an iPhone, more on
+    /// an iPad or a wide Mac window.
+    private var gridColumns: [GridItem] {
+        viewModel.selectedEntryID == nil
+            ? [GridItem(.adaptive(minimum: 320, maximum: 380), spacing: 10)]
+            : [GridItem(.flexible())]
+    }
+
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             let now = timeline.date
@@ -52,22 +61,32 @@ struct ClockListView: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
-                // Capped and centered rather than stretched edge-to-edge — on an iPad
-                // or a wide Mac window, full-width rows would read as absurdly long
-                // thin bars. The sky background above stays full-bleed regardless.
+                // Header and the bottom wheel stay capped at a comfortable reading
+                // width — on an iPad or a wide Mac window, a full-width header/wheel
+                // would look stretched. The city list gets a wider cap of its own
+                // below so it can lay out multiple columns instead of one long column
+                // of absurdly wide rows. The sky background above stays full-bleed.
                 VStack(spacing: 0) {
                     header
+                        .frame(maxWidth: 700)
 
-                    // A plain ScrollView + LazyVStack, not List: List is backed by
+                    // A plain ScrollView + LazyVGrid, not List: List is backed by
                     // UITableView, which recomputes self-sizing row heights in its own
                     // layout pass outside SwiftUI's animation transaction — no combination
                     // of .transition/.animation on the row's content can make THAT smooth,
                     // which is why the row kept visibly jumping no matter how the wheel's
                     // own appearance was animated. Plain SwiftUI layout has no such
-                    // disconnect. LazyVStack keeps List's other benefit — off-screen rows
+                    // disconnect. LazyVGrid keeps List's other benefit — off-screen rows
                     // aren't instantiated — without its row-resize behavior.
+                    //
+                    // Columns collapse to a single one the moment a row is selected: an
+                    // expanded card (with its inline wheel) is taller than a collapsed
+                    // one, and a multi-column grid sizes every card in a row to the
+                    // tallest — so browsing stays a multi-column grid on wide screens,
+                    // but selecting a city reflows to exactly the single-column layout
+                    // the expand/collapse animation was built and tested against.
                     ScrollView {
-                        LazyVStack(spacing: 10) {
+                        LazyVGrid(columns: gridColumns, spacing: 10) {
                             ForEach(entries) { entry in
                                 ClockRow(
                                     entry: entry, now: now, use24Hour: use24Hour,
@@ -93,6 +112,7 @@ struct ClockListView: View {
                         .padding(.horizontal, Theme.Spacing.base)
                         .padding(.vertical, 6)
                     }
+                    .frame(maxWidth: 1100)
                     // The scroll view's own pan recognizer competes with the inline wheel's
                     // horizontal drag even with `.simultaneousGesture` — disabling scroll
                     // while a row is selected removes that conflict. Only one row's wheel is
@@ -114,10 +134,10 @@ struct ClockListView: View {
                         .padding(.horizontal, Theme.Spacing.base)
                         .padding(.top, 22)
                         .padding(.bottom, Theme.Spacing.base)
+                        .frame(maxWidth: 700)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
-                .frame(maxWidth: 700)
             }
         }
         .sheet(isPresented: $showingAddSheet) {
