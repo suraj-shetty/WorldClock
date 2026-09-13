@@ -103,6 +103,9 @@ struct ClockListView: View {
                             let columnCount = columnCount(for: geometry.size.width)
                             HStack(alignment: .top, spacing: 10) {
                                 ForEach(Array(columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
+                                    // maxWidth: .infinity so the HStack splits its width evenly
+                                    // across columns and each one grows/shrinks on rotation —
+                                    // without it, a VStack shrinks to fit its widest row instead.
                                     VStack(spacing: 10) {
                                         ForEach(columnEntries) { entry in
                                             ClockRow(
@@ -126,6 +129,7 @@ struct ClockListView: View {
                                                 }
                                         }
                                     }
+                                    .frame(maxWidth: .infinity)
                                 }
                             }
                             .padding(.horizontal, Theme.Spacing.base)
