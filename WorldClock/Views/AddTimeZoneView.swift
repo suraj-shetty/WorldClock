@@ -1,14 +1,27 @@
 import SwiftUI
 
+/// Doubles as the "Add a city" sheet (multi-select: tap "+" repeatedly, then Done)
+/// and the Settings "Home City" picker (single-select: tap a row to choose and dismiss).
 struct AddTimeZoneView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
-    var title: String = "Add City"
+    @State private var addedLabels: Set<String> = []
+
+    var kicker: String
+    var title: String
+    var isMultiSelect: Bool = true
+    var existingLabels: Set<String> = []
+    var homeTimeZone: TimeZone = .current
+    var use24Hour: Bool = false
+    var now: Date = Date()
     var onSelect: (_ identifier: String, _ label: String) -> Void
 
     private var filteredOptions: [TimeZoneOption] {
         guard !searchText.isEmpty else { return AddTimeZoneView.allOptions }
-        return AddTimeZoneView.allOptions.filter { $0.label.localizedCaseInsensitiveContains(searchText) }
+        return AddTimeZoneView.allOptions.filter {
+            $0.label.localizedCaseInsensitiveContains(searchText)
+                || ($0.country?.name.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
     }
 
     var body: some View {
@@ -22,26 +35,27 @@ struct AddTimeZoneView: View {
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         ForEach(filteredOptions) { option in
-                            Button {
-                                onSelect(option.identifier, option.label)
-                                dismiss()
-                            } label: {
-                                HStack {
-                                    Text(option.label)
-                                        .font(.system(size: 17, weight: .medium))
-                                        .foregroundStyle(Theme.textBright)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 14)
-                                .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.48)))
-                                .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.text.opacity(0.13), lineWidth: 1))
-                            }
-                            .buttonStyle(.plain)
+                            row(for: option)
                         }
                     }
                     .padding(.horizontal, Theme.Spacing.base)
                     .padding(.bottom, Theme.Spacing.lg)
+                }
+
+                if isMultiSelect {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(Theme.accentText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.accent, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, Theme.Spacing.base)
+                    .padding(.bottom, Theme.Spacing.base)
                 }
             }
         }
@@ -49,12 +63,73 @@ struct AddTimeZoneView: View {
         // macOS sizes a .sheet to its content's ideal size rather than filling the
         // window like iOS does — without an explicit frame here, the content
         // gets no definite height and silently collapses to zero.
-        .frame(minWidth: 420, idealWidth: 480, minHeight: 480, idealHeight: 560)
+        .frame(minWidth: 420, idealWidth: 480, minHeight: 480, idealHeight: 620)
         #endif
     }
 
+    private func row(for option: TimeZoneOption) -> some View {
+        let isAdded = isMultiSelect && (existingLabels.contains(option.label) || addedLabels.contains(option.label))
+        let time = timeComponents(for: option.identifier)
+
+        let content = HStack(spacing: 12) {
+            if let country = option.country {
+                Text(country.flag).font(.system(size: 26))
+            }
+            VStack(alignment: .leading, spacing: 3) {
+                Text(option.label)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(Theme.textBright)
+                Text(subtitle(for: option))
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.text.opacity(0.6))
+                    .monospacedDigit()
+            }
+            Spacer(minLength: 8)
+            (
+                Text(time.main).font(.system(size: 20, weight: .medium))
+                + Text(time.period.isEmpty ? "" : " " + time.period).font(.system(size: 12, weight: .medium))
+            )
+            .monospacedDigit()
+            .foregroundStyle(Theme.textBright)
+
+            if isMultiSelect {
+                Button {
+                    onSelect(option.identifier, option.label)
+                    addedLabels.insert(option.label)
+                } label: {
+                    Image(systemName: isAdded ? "checkmark" : "plus")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(isAdded ? Theme.accent.opacity(0.6) : Theme.accentText)
+                        .frame(width: 32, height: 32)
+                        .background(Circle().fill(Theme.glass.opacity(0.5)))
+                        .overlay(Circle().stroke(isAdded ? Theme.accent.opacity(0.3) : Theme.accent, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(isAdded)
+            }
+        }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 12)
+        .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.48)))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.text.opacity(0.13), lineWidth: 1))
+
+        return Group {
+            if isMultiSelect {
+                content
+            } else {
+                Button {
+                    onSelect(option.identifier, option.label)
+                    dismiss()
+                } label: {
+                    content
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
     private var header: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 12) {
             Button {
                 dismiss()
             } label: {
@@ -67,10 +142,16 @@ struct AddTimeZoneView: View {
             }
             .buttonStyle(.plain)
 
-            Text(title)
-                .font(.system(size: 22, weight: .medium))
-                .tracking(-0.4)
-                .foregroundStyle(Theme.text)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(kicker)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .tracking(1.5)
+                    .foregroundStyle(Theme.accentText)
+                Text(title)
+                    .font(.system(size: 29, weight: .medium))
+                    .tracking(-0.5)
+                    .foregroundStyle(Theme.text)
+            }
 
             Spacer()
         }
@@ -83,7 +164,7 @@ struct AddTimeZoneView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(Theme.text.opacity(0.5))
-            TextField("", text: $searchText, prompt: Text("Search timezones").foregroundStyle(Theme.text.opacity(0.4)))
+            TextField("", text: $searchText, prompt: Text("City or country").foregroundStyle(Theme.text.opacity(0.4)))
                 .foregroundStyle(Theme.textBright)
                 .tint(Theme.accent)
             #if os(iOS)
@@ -103,18 +184,47 @@ struct AddTimeZoneView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 11)
         .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.5)))
-        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.text.opacity(0.13), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.accent.opacity(0.5), lineWidth: 1))
         .padding(.horizontal, Theme.Spacing.base)
+    }
+
+    /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
+    private func timeComponents(for identifier: String) -> (main: String, period: String) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: identifier) ?? .current
+        let comps = calendar.dateComponents([.hour, .minute], from: now)
+        let hour = comps.hour ?? 0, minute = comps.minute ?? 0
+        if use24Hour { return (String(format: "%02d:%02d", hour, minute), "") }
+        let displayHour = hour % 12 == 0 ? 12 : hour % 12
+        return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
+    }
+
+    private func subtitle(for option: TimeZoneOption) -> String {
+        let countryName = option.country?.name
+        let homeOffset = homeTimeZone.secondsFromGMT(for: now)
+        let zoneOffset = (TimeZone(identifier: option.identifier) ?? .current).secondsFromGMT(for: now)
+        let diffMinutes = (zoneOffset - homeOffset) / 60
+        let offsetText: String
+        if diffMinutes == 0 {
+            offsetText = "Home"
+        } else {
+            let sign = diffMinutes > 0 ? "+" : "\u{2212}"
+            let magnitude = abs(diffMinutes)
+            let hours = magnitude / 60, minutes = magnitude % 60
+            offsetText = minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(minutes * 10 / 60)h"
+        }
+        return [countryName, offsetText].compactMap { $0 }.joined(separator: " · ")
     }
 }
 
-private struct TimeZoneOption: Identifiable {
+struct TimeZoneOption: Identifiable {
     let label: String
     let identifier: String
     var id: String { "\(label)|\(identifier)" }
+    var country: (name: String, flag: String)? { ClockEntry.lookupCountry(for: identifier) }
 }
 
-private extension AddTimeZoneView {
+extension AddTimeZoneView {
     /// IANA identifiers name one representative city per zone, so a country with a
     /// single nationwide zone but several huge cities — India's `Asia/Kolkata`, say —
     /// otherwise has no way to search for "Bengaluru" or "Delhi" even though both

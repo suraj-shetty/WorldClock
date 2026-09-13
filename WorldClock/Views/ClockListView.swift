@@ -117,7 +117,13 @@ struct ClockListView: View {
             }
         }
         .sheet(isPresented: $showingAddSheet) {
-            AddTimeZoneView { identifier, label in
+            AddTimeZoneView(
+                kicker: "\(entries.count) CITIES ON YOUR CLOCK",
+                title: "Add a city",
+                existingLabels: Set(entries.map(\.label)),
+                homeTimeZone: homeTimeZone,
+                use24Hour: use24Hour
+            ) { identifier, label in
                 addEntry(identifier: identifier, label: label)
             }
         }

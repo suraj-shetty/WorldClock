@@ -89,7 +89,13 @@ struct SettingsView: View {
             }
         }
         .sheet(isPresented: $showingHomePicker) {
-            AddTimeZoneView(title: "Home City") { identifier, _ in
+            AddTimeZoneView(
+                kicker: "HOME TIMEZONE",
+                title: "Choose home city",
+                isMultiSelect: false,
+                homeTimeZone: homeTimeZone,
+                use24Hour: use24Hour
+            ) { identifier, _ in
                 homeTimeZoneIdentifier = identifier
             }
         }
