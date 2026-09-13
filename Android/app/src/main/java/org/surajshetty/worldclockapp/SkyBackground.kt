@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,8 +44,26 @@ import kotlin.math.sin
  */
 @Composable
 fun SkyBackground(hour: Double, modifier: Modifier = Modifier) {
+    // `hour` wraps at 24 (it's a time-of-day, not a plain increasing number), but
+    // animateFloatAsState has no idea about that — fed the raw wrapped value, it
+    // interpolates linearly between old and new, so any transition that crosses
+    // midnight (a long drag, or selecting a city on the other side of it) animates
+    // the "long way" around the clock before snapping back, instead of continuing
+    // forward through the wrap the short way. Unwrapping the target to whichever
+    // representation (hour, hour±24, hour±48, ...) sits closest to the *previous*
+    // unwrapped value keeps the animated value continuous — a smooth drag across
+    // midnight just keeps climbing past 24 instead of resetting to 0, and it's
+    // only wrapped back to 0..24 at the very end, inside the draw layers below.
+    val unwrappedTarget = remember { mutableFloatStateOf(hour.toFloat()) }
+    LaunchedEffect(hour) {
+        var candidate = hour.toFloat()
+        val prev = unwrappedTarget.floatValue
+        while (candidate - prev > 12f) candidate -= 24f
+        while (candidate - prev < -12f) candidate += 24f
+        unwrappedTarget.floatValue = candidate
+    }
     val animatedHour by animateFloatAsState(
-        targetValue = hour.toFloat(),
+        targetValue = unwrappedTarget.floatValue,
         animationSpec = tween(300, easing = FastOutSlowInEasing),
         label = "skyHour"
     )
