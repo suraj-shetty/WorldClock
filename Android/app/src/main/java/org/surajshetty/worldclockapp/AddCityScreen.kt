@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -69,7 +71,7 @@ fun AddCityScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Theme.ground)) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Theme.Spacing.base).padding(top = 12.dp),
                 verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)

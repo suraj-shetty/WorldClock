@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
@@ -124,6 +126,7 @@ fun BoardScreen(
                     modifier = Modifier
                         .widthIn(max = 700.dp)
                         .fillMaxWidth()
+                        .navigationBarsPadding()
                         .padding(horizontal = Theme.Spacing.base)
                         .padding(top = 22.dp, bottom = Theme.Spacing.base)
                 )
@@ -137,8 +140,9 @@ private fun Header(homeZoneLabel: String, onSettings: () -> Unit, onAddCity: () 
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .statusBarsPadding()
             .padding(horizontal = Theme.Spacing.base)
-            .padding(top = 48.dp, bottom = 20.dp),
+            .padding(top = 12.dp, bottom = 20.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
