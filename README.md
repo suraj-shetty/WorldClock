@@ -46,6 +46,11 @@ Drag the wheel and the whole scene animates through it in real time — the sky
 *is* the time display, not a decoration next to one.
 
 <div align="center">
+<video src="docs/screenshots/ios-animation-demo.mp4" width="260" controls muted playsinline></video><br/>
+<sub>One flick of the wheel on iPhone — night through sunrise to midday and back, live</sub>
+</div>
+<br/>
+<div align="center">
 <img src="docs/screenshots/android-phone.png" width="260" alt="World Clock on Android, same seven cities, same dusk sky" />
 </div>
 
@@ -60,7 +65,7 @@ Everything else on the board stays exactly where it was.
 </div>
 <br/>
 <div align="center">
-<img src="docs/screenshots/android-tablet.png" width="700" alt="Masonry grid of seven city cards on an Android tablet" /><br/>
+<img src="docs/screenshots/android-tablet.png" width="700" alt="Masonry grid of six city cards on an Android tablet" /><br/>
 <sub>Android tablet — the same masonry behavior, via a native <code>LazyVerticalStaggeredGrid</code></sub>
 </div>
 
