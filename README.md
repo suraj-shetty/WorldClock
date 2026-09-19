@@ -47,7 +47,7 @@ Drag the wheel and the whole scene animates through it in real time — the sky
 
 <div align="center">
 <video src="docs/screenshots/ios-animation-demo.mp4" width="260" controls muted playsinline></video><br/>
-<sub>One flick of the wheel on iPhone — night through sunrise to midday and back, live</sub>
+<sub>Dragging the wheel on iPhone — night through sunrise to midday and back, live</sub>
 </div>
 <br/>
 <div align="center">
