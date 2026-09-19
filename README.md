@@ -46,7 +46,7 @@ Drag the wheel and the whole scene animates through it in real time — the sky
 *is* the time display, not a decoration next to one.
 
 <div align="center">
-<video src="docs/screenshots/ios-animation-demo.mp4" width="260" controls muted playsinline></video><br/>
+<video src="https://github.com/suraj-shetty/WorldClock/releases/download/media-assets/ios-animation-demo.mp4" width="260" controls muted playsinline></video><br/>
 <sub>Dragging the wheel on iPhone — night through sunrise to midday and back, live</sub>
 </div>
 <br/>
