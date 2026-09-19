@@ -79,7 +79,7 @@ fun BoardScreen(
                 )
         )
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Header(
                 homeZoneLabel = TimeZoneCatalog.displayLabel(viewModel.homeTimeZone.id),
                 onSettings = onSettings, onAddCity = onAddCity,
