@@ -13,7 +13,6 @@ struct AddTimeZoneView: View {
     var existingLabels: Set<String> = []
     var homeTimeZone: TimeZone = .current
     var use24Hour: Bool = false
-    var now: Date = Date()
     var onSelect: (_ identifier: String, _ label: String) -> Void
 
     private var filteredOptions: [TimeZoneOption] {
@@ -33,9 +32,14 @@ struct AddTimeZoneView: View {
                 searchField
 
                 ScrollView {
-                    LazyVStack(spacing: 10) {
-                        ForEach(filteredOptions) { option in
-                            row(for: option)
+                    // Minute resolution is all the displayed times show, so a
+                    // once-a-minute tick is enough to keep this sheet live instead
+                    // of frozen at whatever moment it happened to open.
+                    TimelineView(.periodic(from: .now, by: 60)) { timeline in
+                        LazyVStack(spacing: 10) {
+                            ForEach(filteredOptions) { option in
+                                row(for: option, now: timeline.date)
+                            }
                         }
                     }
                     .padding(.horizontal, Theme.Spacing.base)
@@ -67,13 +71,13 @@ struct AddTimeZoneView: View {
         #endif
     }
 
-    private func row(for option: TimeZoneOption) -> some View {
+    private func row(for option: TimeZoneOption, now: Date) -> some View {
         let isAdded = isMultiSelect && (existingLabels.contains(option.label) || addedLabels.contains(option.label))
         // Resolved once, through the same cache ClockEntry.timeZone uses — this view
         // previously constructed a fresh, uncached TimeZone twice per row (once here,
         // once in subtitle(for:)) on every render of a ~450-row list.
         let zone = TimeZoneResolver.resolve(option.identifier)
-        let time = timeComponents(in: zone)
+        let time = timeComponents(in: zone, now: now)
 
         let content = HStack(spacing: 12) {
             if let country = option.country {
@@ -83,7 +87,7 @@ struct AddTimeZoneView: View {
                 Text(option.label)
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Theme.textBright)
-                Text(subtitle(for: option, in: zone))
+                Text(subtitle(for: option, in: zone, now: now))
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.text.opacity(0.6))
                     .monospacedDigit()
@@ -193,33 +197,19 @@ struct AddTimeZoneView: View {
     }
 
     /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
-    private func timeComponents(in zone: TimeZone) -> (main: String, period: String) {
+    private func timeComponents(in zone: TimeZone, now: Date) -> (main: String, period: String) {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = zone
         let comps = calendar.dateComponents([.hour, .minute], from: now)
-        let hour = comps.hour ?? 0, minute = comps.minute ?? 0
-        if use24Hour { return (String(format: "%02d:%02d", hour, minute), "") }
-        let displayHour = hour % 12 == 0 ? 12 : hour % 12
-        return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
+        return ClockFormatting.timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
     }
 
-    private func subtitle(for option: TimeZoneOption, in zone: TimeZone) -> String {
-        let countryName = option.country?.name
-        let homeOffset = homeTimeZone.secondsFromGMT(for: now)
-        let zoneOffset = zone.secondsFromGMT(for: now)
-        let diffMinutes = (zoneOffset - homeOffset) / 60
-        let offsetText: String
-        if diffMinutes == 0 {
-            offsetText = "Home"
-        } else {
-            let sign = diffMinutes > 0 ? "+" : "\u{2212}"
-            let magnitude = abs(diffMinutes)
-            let hours = magnitude / 60, minutes = magnitude % 60
-            // Rounded, not truncated — see the identical fix in ClockListView.deltaLabel.
-            let tenths = Int((Double(minutes) / 6).rounded())
-            offsetText = minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(tenths)h"
-        }
-        return [countryName, offsetText].compactMap { $0 }.joined(separator: " · ")
+    private func subtitle(for option: TimeZoneOption, in zone: TimeZone, now: Date) -> String {
+        let offsetText = ClockFormatting.offsetLabel(
+            homeOffsetSeconds: homeTimeZone.secondsFromGMT(for: now),
+            zoneOffsetSeconds: zone.secondsFromGMT(for: now)
+        )
+        return [option.country?.name, offsetText].compactMap { $0 }.joined(separator: " · ")
     }
 }
 
@@ -261,7 +251,5 @@ extension AddTimeZoneView {
         return (canonical + aliases).sorted { $0.label.localizedCompare($1.label) == .orderedAscending }
     }()
 
-    static func displayLabel(for identifier: String) -> String {
-        identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? identifier
-    }
+    static func displayLabel(for identifier: String) -> String { ClockFormatting.displayLabel(for: identifier) }
 }

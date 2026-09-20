@@ -46,3 +46,35 @@ extension Color {
         )
     }
 }
+
+/// Shared clock-display formatting — time labels, home-offset labels, and the
+/// "one representative city" name derived from an IANA identifier. Pulled out
+/// since the same math was independently reimplemented in ClockListView,
+/// AddTimeZoneView, TimeWheelView, and SettingsView.
+enum ClockFormatting {
+    /// "3:45" + "PM" (or "15:45" + "" in 24h mode). Split so the AM/PM suffix can
+    /// render smaller than the digits.
+    static func timeComponents(hour: Int, minute: Int, use24Hour: Bool) -> (main: String, period: String) {
+        if use24Hour { return (String(format: "%02d:%02d", hour, minute), "") }
+        let displayHour = hour % 12 == 0 ? 12 : hour % 12
+        return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
+    }
+
+    /// "Home", "+3h", or "−1.5h" — how far a zone sits from home at a given moment,
+    /// from each side's seconds-from-GMT offset.
+    static func offsetLabel(homeOffsetSeconds: Int, zoneOffsetSeconds: Int) -> String {
+        let diffMinutes = (zoneOffsetSeconds - homeOffsetSeconds) / 60
+        if diffMinutes == 0 { return "Home" }
+        let sign = diffMinutes > 0 ? "+" : "\u{2212}"
+        let magnitude = abs(diffMinutes)
+        let hours = magnitude / 60, minutes = magnitude % 60
+        // Rounded, not truncated: minutes=45 is 0.75h, which rounds to ".8h".
+        let tenths = Int((Double(minutes) / 6).rounded())
+        return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(tenths)h"
+    }
+
+    /// An IANA identifier's representative city name, e.g. "Asia/Kolkata" -> "Kolkata".
+    static func displayLabel(for identifier: String) -> String {
+        identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? identifier
+    }
+}

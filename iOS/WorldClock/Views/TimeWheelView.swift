@@ -44,6 +44,16 @@ struct TimeWheelView: View {
             .simultaneousGesture(dragGesture)
             .mask(edgeFadeMask)
             .modifier(WheelChrome(style: style))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Time scrub wheel")
+            .accessibilityValue(shiftedLabel)
+            .accessibilityAdjustableAction { direction in
+                switch direction {
+                case .increment: decelerate(to: min(offset + snapMinutes * 60, limit))
+                case .decrement: decelerate(to: max(offset - snapMinutes * 60, -limit))
+                @unknown default: break
+                }
+            }
         }
     }
 
@@ -86,9 +96,7 @@ struct TimeWheelView: View {
         .transition(.opacity)
     }
 
-    private var homeLabel: String {
-        anchorTimeZone.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? anchorTimeZone.identifier
-    }
+    private var homeLabel: String { ClockFormatting.displayLabel(for: anchorTimeZone.identifier) }
 
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 0)
@@ -116,7 +124,7 @@ struct TimeWheelView: View {
                 let clampedGlide = min(max(rawTarget - releaseOffset, -maxGlide), maxGlide)
                 let target = min(max(releaseOffset + clampedGlide, -limit), limit)
                 let snapped = (target / snapMinutes / 60).rounded() * snapMinutes * 60
-                decelerate(to: snapped)
+                decelerate(to: min(max(snapped, -limit), limit))
             }
     }
 
@@ -143,12 +151,14 @@ struct TimeWheelView: View {
 
     private var displayedDate: Date { anchorNow.addingTimeInterval(offset) }
 
-    private var shiftedLabel: String {
+    private var shiftedLabel: String { TimeWheelView.shiftedLabel(forOffset: offset) }
+
+    static func shiftedLabel(forOffset offset: TimeInterval) -> String {
         let totalMinutes = Int((offset / 60).rounded())
         if abs(totalMinutes) < 1 { return "Now" }
         let hours = totalMinutes / 60
         let minutes = abs(totalMinutes % 60)
-        let sign = hours >= 0 ? "+" : "\u{2212}"
+        let sign = totalMinutes >= 0 ? "+" : "\u{2212}"
         let magnitude = abs(hours)
         return minutes == 0 ? "Shifted by \(sign)\(magnitude)h" : "Shifted by \(sign)\(magnitude)h \(minutes)m"
     }

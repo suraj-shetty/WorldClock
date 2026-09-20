@@ -9,7 +9,6 @@ import Observation
 final class ClockBoardViewModel {
     var selectedEntryID: PersistentIdentifier?
     var offset: TimeInterval = 0
-    var use24Hour: Bool = false
 
     /// Tap a row: selecting it swaps the wheel's anchor to that row and hides the
     /// global wheel; tapping the already-selected row deselects and resets to "Now".

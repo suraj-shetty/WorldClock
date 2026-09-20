@@ -168,14 +168,35 @@ private func ridgePath(_ points: [(x: Double, y: Double)], in rect: CGRect) -> P
 struct BackgroundView: View {
     var hour: Double
 
+    // `hour` wraps at 24 (it's a time-of-day, not a plain increasing number), but the
+    // `.animation`/`Animatable` interpolation below has no idea about that — fed the
+    // raw wrapped value, it eases linearly between old and new, so any transition
+    // that crosses midnight (a long drag, or selecting a city on the other side of
+    // it) animates the "long way" around the clock before snapping back, instead of
+    // continuing forward through the wrap the short way. Unwrapping the target to
+    // whichever representation (hour, hour±24, hour±48, ...) sits closest to the
+    // *previous* unwrapped value keeps the animated value continuous — a smooth drag
+    // across midnight just keeps climbing past 24 instead of resetting to 0 — and
+    // it's only wrapped back to 0..<24 by `normalizedHour` inside the draw layers.
+    @State private var unwrappedHour: Double?
+    private var displayHour: Double { unwrappedHour ?? hour }
+
     var body: some View {
         ZStack {
-            SkyGradientLayer(hour: hour)
-            SkyStarLayer(hour: hour)
-            SkyForegroundLayer(hour: hour)
+            SkyGradientLayer(hour: displayHour)
+            SkyStarLayer(hour: displayHour)
+            SkyForegroundLayer(hour: displayHour)
         }
         .ignoresSafeArea()
-        .animation(.easeInOut(duration: 0.3), value: hour)
+        .animation(.easeInOut(duration: 0.3), value: displayHour)
+        .onAppear { unwrappedHour = hour }
+        .onChange(of: hour) { _, newValue in
+            var candidate = newValue
+            let previous = unwrappedHour ?? newValue
+            while candidate - previous > 12 { candidate -= 24 }
+            while candidate - previous < -12 { candidate += 24 }
+            unwrappedHour = candidate
+        }
     }
 }
 
@@ -217,8 +238,16 @@ private struct SkyGradientLayer: View, Animatable {
 private struct SkyStarLayer: View {
     var hour: Double
 
+    // Ticking every 0.1s is cheap on its own, but there's no point doing it all day
+    // long while the stars are fully invisible (`p.star <= 0.01`, i.e. daylight) —
+    // pausing the schedule then instead of just skipping the draw avoids waking the
+    // view (and its Canvas) 10x/second for nothing. `.animation(paused:)` is used
+    // instead of `.periodic` purely because it's the schedule that exposes a
+    // `paused` flag; `minimumInterval` still caps it to the same ~0.1s cadence.
+    private var starVisible: Bool { skyPalette(forHour: normalizedHour(hour)).star > 0.01 }
+
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.1)) { timeline in
+        TimelineView(.animation(minimumInterval: 0.1, paused: !starVisible)) { timeline in
             Canvas { context, size in
                 let p = skyPalette(forHour: normalizedHour(hour))
                 guard p.star > 0.01 else { return }
@@ -262,20 +291,41 @@ private func normalizedHour(_ hour: Double) -> Double {
     return raw < 0 ? raw + 24 : raw
 }
 
+/// Pure sun/moon arc math (opacity ramps + arc position), split out of `drawForeground`
+/// so it's testable without a `GraphicsContext` — this is exactly the kind of
+/// hour-wrap arithmetic that had a real bug (see the comment inside).
+struct SunMoonPosition: Equatable {
+    let sunT: Double, sunUp: Double, sunO: Double
+    let moonT: Double, moonUp: Double, moonO: Double
+}
+
+func sunMoonPosition(forHour h: Double) -> SunMoonPosition {
+    // Sun rides 5:40→19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20→6:20.
+    let sunT = clamp01((h - 6) / 12)
+    let sunUp = sin(sunT * .pi)
+    let sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
+    // Hours since the moon's 18:00 "rise" reference, wrapping every 24h — the wrap
+    // lands exactly at 18:00, where moonO is already 0 on both sides of it, so it
+    // never shows. A naive `h < 12 ? h + 24 : h` instead wraps at *noon*, deep in
+    // broad daylight — any transition between a daytime and nighttime city crosses
+    // that point, so the moon's invisible resting position would teleport across
+    // the sky mid-transition, and the tail end of that teleport could still be
+    // visible once its opacity ramped back up.
+    let hoursSinceMoonrise = h < 18 ? h + 6 : h - 18
+    let moonT = clamp01(hoursSinceMoonrise / 12)
+    let moonUp = sin(moonT * .pi)
+    let moonO = min(ramp(hoursSinceMoonrise, 0.4, 2.2), 1 - ramp(hoursSinceMoonrise, 9.4, 11.0))
+    return SunMoonPosition(sunT: sunT, sunUp: sunUp, sunO: sunO, moonT: moonT, moonUp: moonUp, moonO: moonO)
+}
+
 private func drawForeground(context: inout GraphicsContext, size: CGSize, hour h: Double) {
     let p = skyPalette(forHour: h)
     let w = size.width, ht = size.height
     let scale = min(w, ht) / 390
 
-    // Sun rides 5:40→19:00 (opacity ramps 4.9-6.0 in, 18.1-19.4 out); moon 18:20→6:20,
-    // continuous across midnight via `hh`.
-    let sunT = clamp01((h - 6) / 12)
-    let sunUp = sin(sunT * .pi)
-    let sunO = min(ramp(h, 4.9, 6.0), 1 - ramp(h, 18.1, 19.4))
-    let hh = h < 12 ? h + 24 : h
-    let moonT = clamp01((hh - 18) / 12)
-    let moonUp = sin(moonT * .pi)
-    let moonO = min(ramp(hh, 18.4, 20.2), 1 - ramp(hh, 27.4, 29.0))
+    let pos = sunMoonPosition(forHour: h)
+    let sunT = pos.sunT, sunUp = pos.sunUp, sunO = pos.sunO
+    let moonT = pos.moonT, moonUp = pos.moonUp, moonO = pos.moonO
 
     let sunHi = Color(hex: 0xfffaf0)
     let sunBody = lerp(Color(hex: 0xf6d9b4), Color(hex: 0xf9f2e0), sunUp)

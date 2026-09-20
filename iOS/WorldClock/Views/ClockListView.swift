@@ -186,8 +186,7 @@ struct ClockListView: View {
     }
 
     private var homeKicker: String {
-        let name = homeTimeZone.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? homeTimeZone.identifier
-        return "\(name.uppercased()) · YOUR TIME"
+        "\(ClockFormatting.displayLabel(for: homeTimeZone.identifier).uppercased()) · YOUR TIME"
     }
 
     private var header: some View {
@@ -299,6 +298,7 @@ private struct ClockRow: View {
                     .animation(.snappy(duration: 0.35), value: timeComponents.main)
                 }
                 .contentShape(Rectangle())
+                .accessibilityElement(children: .combine)
             }
             .buttonStyle(.plain)
 
@@ -368,24 +368,14 @@ private struct ClockRow: View {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = entry.timeZone
         let comps = calendar.dateComponents([.hour, .minute], from: displayedDate)
-        let hour = comps.hour ?? 0, minute = comps.minute ?? 0
-        if use24Hour { return (String(format: "%02d:%02d", hour, minute), "") }
-        let displayHour = hour % 12 == 0 ? 12 : hour % 12
-        return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
+        return ClockFormatting.timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
     }
 
     private var deltaLabel: String {
-        let homeOffset = homeTimeZone.secondsFromGMT(for: displayedDate)
-        let entryOffset = entry.timeZone.secondsFromGMT(for: displayedDate)
-        let diffMinutes = (entryOffset - homeOffset) / 60
-        if diffMinutes == 0 { return "Home" }
-        let sign = diffMinutes > 0 ? "+" : "\u{2212}"
-        let magnitude = abs(diffMinutes)
-        let hours = magnitude / 60, minutes = magnitude % 60
-        // Rounded, not truncated: minutes=45 is 0.75h, which rounds to ".8h" — integer
-        // division here previously truncated that to ".7h".
-        let tenths = Int((Double(minutes) / 6).rounded())
-        return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(tenths)h"
+        ClockFormatting.offsetLabel(
+            homeOffsetSeconds: homeTimeZone.secondsFromGMT(for: displayedDate),
+            zoneOffsetSeconds: entry.timeZone.secondsFromGMT(for: displayedDate)
+        )
     }
 
     /// True when the entry's local calendar date (at the displayed moment) is a day

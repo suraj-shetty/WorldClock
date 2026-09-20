@@ -16,9 +16,7 @@ struct SettingsView: View {
         homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
     }
 
-    private var homeLabel: String {
-        homeTimeZone.identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? homeTimeZone.identifier
-    }
+    private var homeLabel: String { ClockFormatting.displayLabel(for: homeTimeZone.identifier) }
 
     var body: some View {
         ZStack {
