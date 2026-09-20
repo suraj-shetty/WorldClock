@@ -16,6 +16,7 @@ struct TimeWheelView: View {
 
     private let pixelsPerMinute: CGFloat = 1.5
     @AppStorage("snapMinutes") private var snapMinutesSetting = 15
+    @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
     private var snapMinutes: TimeInterval { TimeInterval(snapMinutesSetting) }
     private let limit: TimeInterval = 48 * 3600
 
@@ -96,7 +97,11 @@ struct TimeWheelView: View {
         .transition(.opacity)
     }
 
-    private var homeLabel: String { ClockFormatting.displayLabel(for: anchorTimeZone.identifier) }
+    // Only shown for the bottom (home) wheel, where anchorTimeZone is always the
+    // home zone — same alias fallback as SettingsView/ClockListView's homeLabel.
+    private var homeLabel: String {
+        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: anchorTimeZone.identifier) : homeTimeZoneLabel
+    }
 
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 0)
@@ -158,7 +163,7 @@ struct TimeWheelView: View {
         if abs(totalMinutes) < 1 { return "Now" }
         let hours = totalMinutes / 60
         let minutes = abs(totalMinutes % 60)
-        let sign = totalMinutes >= 0 ? "+" : "\u{2212}"
+        let sign = totalMinutes >= 0 ? "+" : ClockFormatting.minusSign
         let magnitude = abs(hours)
         return minutes == 0 ? "Shifted by \(sign)\(magnitude)h" : "Shifted by \(sign)\(magnitude)h \(minutes)m"
     }

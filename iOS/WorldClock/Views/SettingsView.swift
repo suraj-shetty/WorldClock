@@ -9,6 +9,7 @@ struct SettingsView: View {
     @AppStorage("flagNextDayCities") private var flagNextDayCities = false
     @AppStorage("snapMinutes") private var snapMinutes = 15
     @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
+    @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
 
     @State private var showingHomePicker = false
 
@@ -16,7 +17,11 @@ struct SettingsView: View {
         homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
     }
 
-    private var homeLabel: String { ClockFormatting.displayLabel(for: homeTimeZone.identifier) }
+    // The alias the user picked the home city under (e.g. a city name sharing a
+    // country's zone), falling back to the zone ID's own name when unset.
+    private var homeLabel: String {
+        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: homeTimeZone.identifier) : homeTimeZoneLabel
+    }
 
     var body: some View {
         ZStack {
@@ -93,8 +98,9 @@ struct SettingsView: View {
                 isMultiSelect: false,
                 homeTimeZone: homeTimeZone,
                 use24Hour: use24Hour
-            ) { identifier, _ in
+            ) { identifier, label in
                 homeTimeZoneIdentifier = identifier
+                homeTimeZoneLabel = label
             }
         }
         #if os(macOS)

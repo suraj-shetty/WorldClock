@@ -22,6 +22,12 @@ import java.time.ZoneId
 class ClockViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ClockRepository(application)
 
+    // A single-threaded slice of Dispatchers.IO — saveSettings/saveEntries must land
+    // in the order they were called in, but separately `launch`ed coroutines on the
+    // full IO pool have no such guarantee, so two rapid edits could write their
+    // snapshots to disk out of order and silently revert the more recent one.
+    private val persistDispatcher = Dispatchers.IO.limitedParallelism(1)
+
     var entries by mutableStateOf(repository.loadEntries().sortedBy { it.sortOrder })
         private set
 
@@ -90,7 +96,7 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
         settings = transform(settings)
         val snapshot = settings
-        viewModelScope.launch(Dispatchers.IO) { repository.saveSettings(snapshot) }
+        viewModelScope.launch(persistDispatcher) { repository.saveSettings(snapshot) }
     }
 
     /** The timezone the active wheel's tick labels are drawn in: the selected row's
@@ -111,7 +117,7 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun persistEntries() {
         val snapshot = entries
-        viewModelScope.launch(Dispatchers.IO) { repository.saveEntries(snapshot) }
+        viewModelScope.launch(persistDispatcher) { repository.saveEntries(snapshot) }
     }
 
     companion object {

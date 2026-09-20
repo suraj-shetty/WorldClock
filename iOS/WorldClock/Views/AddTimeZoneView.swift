@@ -245,11 +245,9 @@ extension AddTimeZoneView {
 
     static let allOptions: [TimeZoneOption] = {
         let canonical = TimeZone.knownTimeZoneIdentifiers.map { identifier in
-            TimeZoneOption(label: displayLabel(for: identifier), identifier: identifier)
+            TimeZoneOption(label: ClockFormatting.displayLabel(for: identifier), identifier: identifier)
         }
         let aliases = cityAliases.map { TimeZoneOption(label: $0.label, identifier: $0.identifier) }
         return (canonical + aliases).sorted { $0.label.localizedCompare($1.label) == .orderedAscending }
     }()
-
-    static func displayLabel(for identifier: String) -> String { ClockFormatting.displayLabel(for: identifier) }
 }

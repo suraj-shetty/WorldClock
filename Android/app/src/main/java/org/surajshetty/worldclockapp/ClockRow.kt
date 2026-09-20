@@ -158,7 +158,6 @@ fun ClockRow(
     }
 }
 
-
 private fun isNextDay(homeZone: ZoneId, entryZone: ZoneId, at: Instant): Boolean {
     val homeDay = at.atZone(homeZone).toLocalDate()
     val entryDay = at.atZone(entryZone).toLocalDate()

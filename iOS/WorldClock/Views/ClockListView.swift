@@ -19,9 +19,16 @@ struct ClockListView: View {
     @AppStorage("animateSky") private var animateSky = true
     @AppStorage("flagNextDayCities") private var flagNextDayCities = false
     @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
+    @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
 
     private var homeTimeZone: TimeZone {
         homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
+    }
+
+    // The alias the user picked the home city under, falling back to the zone
+    // ID's own name when unset — see the identical fallback in SettingsView.
+    private var homeLabel: String {
+        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: homeTimeZone.identifier) : homeTimeZoneLabel
     }
 
     /// As many ~330pt columns as fit — 1 on an iPhone, more on an iPad or a wide Mac
@@ -185,9 +192,7 @@ struct ClockListView: View {
         }
     }
 
-    private var homeKicker: String {
-        "\(ClockFormatting.displayLabel(for: homeTimeZone.identifier).uppercased()) · YOUR TIME"
-    }
+    private var homeKicker: String { "\(homeLabel.uppercased()) · YOUR TIME" }
 
     private var header: some View {
         HStack(alignment: .bottom) {

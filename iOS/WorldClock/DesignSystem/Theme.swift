@@ -52,6 +52,9 @@ extension Color {
 /// since the same math was independently reimplemented in ClockListView,
 /// AddTimeZoneView, TimeWheelView, and SettingsView.
 enum ClockFormatting {
+    /// Unicode minus (U+2212), used instead of ASCII '-' for negative offsets throughout.
+    static let minusSign = "\u{2212}"
+
     /// "3:45" + "PM" (or "15:45" + "" in 24h mode). Split so the AM/PM suffix can
     /// render smaller than the digits.
     static func timeComponents(hour: Int, minute: Int, use24Hour: Bool) -> (main: String, period: String) {
@@ -65,7 +68,7 @@ enum ClockFormatting {
     static func offsetLabel(homeOffsetSeconds: Int, zoneOffsetSeconds: Int) -> String {
         let diffMinutes = (zoneOffsetSeconds - homeOffsetSeconds) / 60
         if diffMinutes == 0 { return "Home" }
-        let sign = diffMinutes > 0 ? "+" : "\u{2212}"
+        let sign = diffMinutes > 0 ? "+" : minusSign
         let magnitude = abs(diffMinutes)
         let hours = magnitude / 60, minutes = magnitude % 60
         // Rounded, not truncated: minutes=45 is 0.75h, which rounds to ".8h".
