@@ -87,7 +87,7 @@ fun SettingsScreen(
                     homeCountry?.let { BasicText(it.flag, style = TextStyle(fontSize = 22.sp)) }
                     Column(modifier = Modifier.weight(1f)) {
                         BasicText(
-                            TimeZoneCatalog.displayLabel(viewModel.homeTimeZone.id),
+                            viewModel.homeTimeZoneLabel,
                             style = TextStyle(color = Theme.textBright, fontSize = 18.sp, fontWeight = FontWeight.Medium)
                         )
                         val suffix = "all offsets are measured from here"

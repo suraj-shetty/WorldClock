@@ -52,4 +52,10 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    testImplementation("junit:junit:4.13.2")
+    // Local unit tests run against the stub android.jar, whose org.json classes throw
+    // "not mocked" — this real implementation on the test classpath covers ClockRepository's
+    // JSON round-trip test.
+    testImplementation("org.json:json:20231013")
 }

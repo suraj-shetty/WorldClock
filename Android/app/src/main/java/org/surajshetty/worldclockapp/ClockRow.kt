@@ -105,7 +105,7 @@ fun ClockRow(
                 )
             }
 
-            val time = formatTime(zdt, use24Hour)
+            val time = formatClockTime(zdt, use24Hour)
             Row(verticalAlignment = Alignment.Bottom) {
                 BasicText(
                     text = time.first,
@@ -158,24 +158,6 @@ fun ClockRow(
     }
 }
 
-private fun formatTime(zdt: ZonedDateTime, use24Hour: Boolean): Pair<String, String> {
-    if (use24Hour) return String.format("%02d:%02d", zdt.hour, zdt.minute) to ""
-    val displayHour = if (zdt.hour % 12 == 0) 12 else zdt.hour % 12
-    return String.format("%d:%02d", displayHour, zdt.minute) to (if (zdt.hour < 12) "AM" else "PM")
-}
-
-private fun deltaLabel(homeZone: ZoneId, entryZone: ZoneId, at: Instant): String {
-    val homeOffsetSeconds = homeZone.rules.getOffset(at).totalSeconds
-    val entryOffsetSeconds = entryZone.rules.getOffset(at).totalSeconds
-    val diffMinutes = (entryOffsetSeconds - homeOffsetSeconds) / 60
-    if (diffMinutes == 0) return "Home"
-    val sign = if (diffMinutes > 0) "+" else "−"
-    val magnitude = kotlin.math.abs(diffMinutes)
-    val hours = magnitude / 60
-    val minutes = magnitude % 60
-    val tenths = Math.round(minutes / 6.0)
-    return if (minutes == 0) "$sign${hours}h" else "$sign$hours.${tenths}h"
-}
 
 private fun isNextDay(homeZone: ZoneId, entryZone: ZoneId, at: Instant): Boolean {
     val homeDay = at.atZone(homeZone).toLocalDate()
@@ -191,7 +173,7 @@ private fun subtitle(
     if (showCountryName) {
         CountryLookup.lookup(entry.timeZoneId)?.let { parts.add("${it.flag} ${it.name}") }
     }
-    parts.add(deltaLabel(homeZone, entryZone, at))
+    parts.add(formatOffsetLabel(homeZone, entryZone, at))
     if (flagNextDayCities && isNextDay(homeZone, entryZone, at)) parts.add("Next day")
     return parts.joinToString(" · ")
 }

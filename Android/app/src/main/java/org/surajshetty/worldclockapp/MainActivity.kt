@@ -2,6 +2,7 @@ package org.surajshetty.worldclockapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +36,10 @@ private fun WorldClockApp(viewModel: ClockViewModel) {
     var screen by remember { mutableStateOf(Screen.Board) }
     var now by remember { mutableStateOf(Instant.now()) }
 
+    BackHandler(enabled = screen != Screen.Board) {
+        screen = if (screen == Screen.HomePicker) Screen.Settings else Screen.Board
+    }
+
     androidx.compose.runtime.LaunchedEffect(Unit) {
         while (isActive) {
             now = Instant.now()
@@ -63,7 +68,7 @@ private fun WorldClockApp(viewModel: ClockViewModel) {
             isMultiSelect = false,
             existingTimeZoneIds = emptySet(),
             homeZone = viewModel.homeTimeZone, use24Hour = viewModel.settings.use24Hour, now = now,
-            onSelect = { id, _ -> viewModel.setUseHomeAsHomeTimeZone(id) },
+            onSelect = { id, label -> viewModel.setHomeTimeZone(id, label) },
             onDismiss = { screen = Screen.Settings }
         )
         Screen.Settings -> SettingsScreen(

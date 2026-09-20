@@ -38,9 +38,10 @@ import kotlin.math.sin
  * Full-bleed sky illustration keyed to `hour` (0..<24, fractional, in whichever
  * timezone is the active anchor) — ported from the iOS app's BackgroundView.swift.
  *
- * Three layers, like the iOS version, so only the star field's twinkle needs to
- * tick continuously: the gradient and the (expensive, blur-heavy) foreground redraw
- * only when `hour` itself changes.
+ * Three layers, like the iOS version. The star field's twinkle ticks continuously;
+ * the gradient and the (expensive, blur-heavy) foreground only redraw while `hour`
+ * is animating into a new value (each transition is a single 300ms tween, not a
+ * continuous loop), then sit idle once it settles.
  */
 @Composable
 fun SkyBackground(hour: Double, modifier: Modifier = Modifier) {
@@ -90,8 +91,10 @@ private fun SkyGradientLayer(hour: Double, modifier: Modifier) {
 
 @Composable
 private fun SkyStarLayer(hour: Double, modifier: Modifier) {
+    val starVisible = skyPalette(normalizedHour(hour)).star > 0.01
     var tick by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) {
+    LaunchedEffect(starVisible) {
+        if (!starVisible) return@LaunchedEffect
         while (isActive) {
             delay(100)
             tick++

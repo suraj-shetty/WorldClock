@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below (Auto Backup). Scopes backup to the app's own prefs
+     file (city list + settings), rather than the implicit include-everything
+     default. -->
+<full-backup-content>
+    <include domain="sharedpref" path="world_clock.xml" />
+</full-backup-content>

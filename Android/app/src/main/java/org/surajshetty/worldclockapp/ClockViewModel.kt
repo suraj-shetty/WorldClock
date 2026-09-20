@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.Instant
@@ -76,14 +77,20 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
         offset = seconds
     }
 
-    fun setUseHomeAsHomeTimeZone(timeZoneId: String) {
-        updateSettings { it.copy(homeTimeZoneId = timeZoneId) }
+    fun setHomeTimeZone(timeZoneId: String, label: String) {
+        updateSettings { it.copy(homeTimeZoneId = timeZoneId, homeTimeZoneLabel = label) }
     }
+
+    /** The home zone's display label — the alias the user picked it under (e.g. a
+     * city name sharing a country's zone), falling back to the zone ID's own name
+     * when unset. */
+    val homeTimeZoneLabel: String
+        get() = settings.homeTimeZoneLabel ?: TimeZoneCatalog.displayLabel(homeTimeZone.id)
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
         settings = transform(settings)
         val snapshot = settings
-        viewModelScope.launch { repository.saveSettings(snapshot) }
+        viewModelScope.launch(Dispatchers.IO) { repository.saveSettings(snapshot) }
     }
 
     /** The timezone the active wheel's tick labels are drawn in: the selected row's
@@ -104,7 +111,7 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun persistEntries() {
         val snapshot = entries
-        viewModelScope.launch { repository.saveEntries(snapshot) }
+        viewModelScope.launch(Dispatchers.IO) { repository.saveEntries(snapshot) }
     }
 
     companion object {

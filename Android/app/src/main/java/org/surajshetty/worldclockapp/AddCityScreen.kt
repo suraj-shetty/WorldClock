@@ -34,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -171,8 +170,12 @@ private fun OptionRow(
 ) {
     val zone = remember(option.timeZoneId) { runCatching { ZoneId.of(option.timeZoneId) }.getOrDefault(ZoneId.systemDefault()) }
     val zdt = ZonedDateTime.ofInstant(now, zone)
-    val time = formatOptionTime(zdt, use24Hour)
-    val subtitle = remember(option.timeZoneId, homeZone) { optionSubtitle(option, zone, homeZone, now) }
+    val (timeText, period) = formatClockTime(zdt, use24Hour)
+    val time = if (period.isEmpty()) timeText else "$timeText $period"
+    val subtitle = remember(option.timeZoneId, homeZone) {
+        val offsetText = formatOffsetLabel(homeZone, zone, now)
+        listOfNotNull(option.country?.name, offsetText).joinToString(" · ")
+    }
 
     Row(
         modifier = Modifier
@@ -216,27 +219,3 @@ private fun OptionRow(
     }
 }
 
-private fun formatOptionTime(zdt: ZonedDateTime, use24Hour: Boolean): String {
-    if (use24Hour) return String.format("%02d:%02d", zdt.hour, zdt.minute)
-    val displayHour = if (zdt.hour % 12 == 0) 12 else zdt.hour % 12
-    val period = if (zdt.hour < 12) "AM" else "PM"
-    return String.format("%d:%02d %s", displayHour, zdt.minute, period)
-}
-
-private fun optionSubtitle(option: TimeZoneOption, zone: ZoneId, homeZone: ZoneId, now: Instant): String {
-    val homeOffset = homeZone.rules.getOffset(now).totalSeconds
-    val zoneOffset = zone.rules.getOffset(now).totalSeconds
-    val diffMinutes = (zoneOffset - homeOffset) / 60
-    val offsetText = if (diffMinutes == 0) {
-        "Home"
-    } else {
-        val sign = if (diffMinutes > 0) "+" else "−"
-        val magnitude = kotlin.math.abs(diffMinutes)
-        val hours = magnitude / 60
-        val minutes = magnitude % 60
-        val tenths = Math.round(minutes / 6.0)
-        if (minutes == 0) "$sign${hours}h" else "$sign$hours.${tenths}h"
-    }
-    val countryName = option.country?.name
-    return listOfNotNull(countryName, offsetText).joinToString(" · ")
-}

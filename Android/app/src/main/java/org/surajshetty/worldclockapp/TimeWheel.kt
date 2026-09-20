@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -68,6 +70,10 @@ private data class WheelMetrics(
 }
 
 private val easeOutCubic = Easing { t -> 1f - (1f - t).let { it * it * it } }
+
+/** Ticks within this many px of the center caret get the "near" accent treatment
+ * (brighter color, taller mark) instead of the ambient fade. */
+private const val nearCaretRadiusPx = 44f
 
 /**
  * A tactile horizontal ruler: dragging slides the tape under a fixed center caret.
@@ -118,6 +124,7 @@ fun TimeWheel(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(canvasHeight)
+                    .semantics { contentDescription = "Time scrub wheel: ${shiftedLabel(offset)}" }
                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .fadeMask(style)
                     .pointerInput(Unit) {
@@ -206,12 +213,12 @@ private fun LabelRow(offset: Double, anchorZone: ZoneId, style: WheelStyle, onNo
     }
 }
 
-private fun shiftedLabel(offset: Double): String {
+internal fun shiftedLabel(offset: Double): String {
     val totalMinutes = (offset / 60).roundToLong()
     if (abs(totalMinutes) < 1) return "Now"
     val hours = totalMinutes / 60
     val minutes = abs(totalMinutes % 60)
-    val sign = if (hours >= 0) "+" else "−"
+    val sign = if (totalMinutes >= 0) "+" else MINUS_SIGN
     val magnitude = abs(hours)
     return if (minutes == 0L) "Shifted by $sign${magnitude}h" else "Shifted by $sign${magnitude}h ${minutes}m"
 }
@@ -231,12 +238,18 @@ private fun DrawScope.drawWheel(
     val rangeEnd = display.plusNanos((halfRangeSeconds * 1_000_000_000).toLong())
     val startEpoch = Math.floorDiv(rangeStart.epochSecond, 300L) * 300L
 
+    val labelPaint = android.graphics.Paint().apply {
+        isAntiAlias = true
+        textAlign = android.graphics.Paint.Align.CENTER
+        textSize = with(this@drawWheel) { 10.sp.toPx() }
+    }
+
     var tickEpoch = startEpoch
     while (tickEpoch <= rangeEnd.epochSecond) {
         val minutesFromCenter = (tickEpoch - display.epochSecond) / 60.0
         val x = half + (minutesFromCenter * pixelsPerMinute).toFloat()
         val d = abs(x - half)
-        val near = (1 - d / 44f).coerceAtLeast(0f)
+        val near = (1 - d / nearCaretRadiusPx).coerceAtLeast(0f)
         val zdt = ZonedDateTime.ofInstant(Instant.ofEpochSecond(tickEpoch), anchorZone)
         val minute = zdt.minute
         val isHour = minute == 0
@@ -256,14 +269,9 @@ private fun DrawScope.drawWheel(
 
         if (isHalf) {
             val hour = zdt.hour
-            val paint = android.graphics.Paint().apply {
-                isAntiAlias = true
-                textAlign = android.graphics.Paint.Align.CENTER
-                textSize = with(this@drawWheel) { 10.sp.toPx() }
-                color = Theme.text.copy(alpha = 0.42f + 0.58f * near).toArgb()
-            }
+            labelPaint.color = Theme.text.copy(alpha = 0.42f + 0.58f * near).toArgb()
             drawContext.canvas.nativeCanvas.drawText(
-                tickLabel(hour, isHour, use24Hour), x, height - metrics.labelsBottomInset - 3, paint
+                tickLabel(hour, isHour, use24Hour), x, height - metrics.labelsBottomInset - 3, labelPaint
             )
         }
 

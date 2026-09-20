@@ -81,7 +81,7 @@ fun BoardScreen(
 
         Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Header(
-                homeZoneLabel = TimeZoneCatalog.displayLabel(viewModel.homeTimeZone.id),
+                homeZoneLabel = viewModel.homeTimeZoneLabel,
                 onSettings = onSettings, onAddCity = onAddCity,
                 modifier = Modifier.widthIn(max = 700.dp)
             )

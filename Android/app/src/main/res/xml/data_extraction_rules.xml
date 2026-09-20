@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (cloud backup + device-to-device transfer). Scopes both to
+     the app's own prefs file (city list + settings), rather than the
+     implicit include-everything default. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="world_clock.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="world_clock.xml" />
+    </device-transfer>
+</data-extraction-rules>

@@ -7,5 +7,6 @@ data class AppSettings(
     val animateSky: Boolean = true,
     val flagNextDayCities: Boolean = false,
     val snapMinutes: Int = 15,
-    val homeTimeZoneId: String? = null // null = device default
+    val homeTimeZoneId: String? = null, // null = device default
+    val homeTimeZoneLabel: String? = null // the label the user picked it under, e.g. a city alias
 )

@@ -2,6 +2,7 @@ package org.surajshetty.worldclockapp
 
 import android.content.Context
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 
 /**
@@ -14,30 +15,11 @@ class ClockRepository(context: Context) {
 
     fun loadEntries(): List<ClockEntry> {
         val raw = prefs.getString(KEY_ENTRIES, null) ?: return emptyList()
-        val array = JSONArray(raw)
-        return (0 until array.length()).map { i ->
-            val obj = array.getJSONObject(i)
-            ClockEntry(
-                id = obj.getString("id"),
-                timeZoneId = obj.getString("timeZoneId"),
-                label = obj.getString("label"),
-                sortOrder = obj.getInt("sortOrder")
-            )
-        }
+        return parseEntries(raw)
     }
 
     fun saveEntries(entries: List<ClockEntry>) {
-        val array = JSONArray()
-        entries.forEach { entry ->
-            array.put(
-                JSONObject()
-                    .put("id", entry.id)
-                    .put("timeZoneId", entry.timeZoneId)
-                    .put("label", entry.label)
-                    .put("sortOrder", entry.sortOrder)
-            )
-        }
-        prefs.edit().putString(KEY_ENTRIES, array.toString()).apply()
+        prefs.edit().putString(KEY_ENTRIES, serializeEntries(entries)).apply()
     }
 
     fun loadSettings(): AppSettings = AppSettings(
@@ -46,7 +28,8 @@ class ClockRepository(context: Context) {
         animateSky = prefs.getBoolean(KEY_ANIMATE_SKY, true),
         flagNextDayCities = prefs.getBoolean(KEY_FLAG_NEXT_DAY, false),
         snapMinutes = prefs.getInt(KEY_SNAP_MINUTES, 15),
-        homeTimeZoneId = prefs.getString(KEY_HOME_ZONE, null)
+        homeTimeZoneId = prefs.getString(KEY_HOME_ZONE, null),
+        homeTimeZoneLabel = prefs.getString(KEY_HOME_ZONE_LABEL, null)
     )
 
     fun saveSettings(settings: AppSettings) {
@@ -57,6 +40,7 @@ class ClockRepository(context: Context) {
             .putBoolean(KEY_FLAG_NEXT_DAY, settings.flagNextDayCities)
             .putInt(KEY_SNAP_MINUTES, settings.snapMinutes)
             .putString(KEY_HOME_ZONE, settings.homeTimeZoneId)
+            .putString(KEY_HOME_ZONE_LABEL, settings.homeTimeZoneLabel)
             .apply()
     }
 
@@ -69,5 +53,37 @@ class ClockRepository(context: Context) {
         const val KEY_FLAG_NEXT_DAY = "flagNextDayCities"
         const val KEY_SNAP_MINUTES = "snapMinutes"
         const val KEY_HOME_ZONE = "homeTimeZoneId"
+        const val KEY_HOME_ZONE_LABEL = "homeTimeZoneLabel"
     }
+}
+
+/** Pulled out of [ClockRepository] so the JSON round-trip (including malformed
+ * input) can be unit-tested without a [Context]/SharedPreferences. */
+internal fun parseEntries(raw: String): List<ClockEntry> = try {
+    val array = JSONArray(raw)
+    (0 until array.length()).map { i ->
+        val obj = array.getJSONObject(i)
+        ClockEntry(
+            id = obj.getString("id"),
+            timeZoneId = obj.getString("timeZoneId"),
+            label = obj.getString("label"),
+            sortOrder = obj.getInt("sortOrder")
+        )
+    }
+} catch (e: JSONException) {
+    emptyList()
+}
+
+internal fun serializeEntries(entries: List<ClockEntry>): String {
+    val array = JSONArray()
+    entries.forEach { entry ->
+        array.put(
+            JSONObject()
+                .put("id", entry.id)
+                .put("timeZoneId", entry.timeZoneId)
+                .put("label", entry.label)
+                .put("sortOrder", entry.sortOrder)
+        )
+    }
+    return array.toString()
 }
