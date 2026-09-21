@@ -113,7 +113,14 @@ struct ClockListView: View {
                                     // maxWidth: .infinity so the HStack splits its width evenly
                                     // across columns and each one grows/shrinks on rotation —
                                     // without it, a VStack shrinks to fit its widest row instead.
-                                    VStack(spacing: 10) {
+                                    // LazyVStack (not VStack): a plain VStack builds and lays out
+                                    // every row up front regardless of scroll position, so with a
+                                    // long city list this column would do full-tree work every
+                                    // second (the outer TimelineView redraws the whole board once
+                                    // a second) even for rows nowhere near the viewport. LazyVStack
+                                    // defers offscreen rows the same way AddTimeZoneView's ~450-row
+                                    // picker list already does.
+                                    LazyVStack(spacing: 10) {
                                         ForEach(columnEntries) { entry in
                                             ClockRow(
                                                 entry: entry, now: now, use24Hour: use24Hour,
