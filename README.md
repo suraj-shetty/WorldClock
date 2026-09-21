@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🌙 WorldClock
+<img src="docs/screenshots/app-icon.png" width="88" alt="WorldClock app icon: a cream clock face with terracotta rim and hands set at ten-past-ten" />
+
+# WorldClock
 
 **A timezone comparison app that looks like the sky it's telling you about.**
 
@@ -46,8 +48,8 @@ Drag the wheel and the whole scene animates through it in real time — the sky
 *is* the time display, not a decoration next to one.
 
 <div align="center">
-<video src="https://github.com/suraj-shetty/WorldClock/releases/download/media-assets/ios-animation-demo.mp4" width="260" controls muted playsinline></video><br/>
-<sub>Dragging the wheel on iPhone — night through sunrise to midday and back, live</sub>
+<img src="docs/screenshots/ios-animation-demo.gif" width="260" alt="Dragging the time wheel on iPhone, animating the sky from night through sunrise to midday and back" /><br/>
+<sub>Dragging the wheel on iPhone — night through sunrise to midday and back, live. (<a href="https://github.com/suraj-shetty/WorldClock/releases/download/media-assets/ios-animation-demo.mp4">Full-quality MP4</a>)</sub>
 </div>
 <br/>
 <div align="center">
@@ -88,6 +90,11 @@ platform while looking unmistakably like the same product. Same accent color
 (`#9184D9`, used only as a line or a glow — never a fill), same type scale,
 same wheel math, same sky.
 
+<div align="center">
+<img src="docs/screenshots/android-settings.png" width="260" alt="Android Settings screen: home city, clock preferences, scrub-snap increment" /><br/>
+<sub>The same settings screen (shown on iOS above), native on Android</sub>
+</div>
+
 - **[`iOS/`](iOS/)** — the SwiftUI app. See [`iOS/README.md`](iOS/README.md)
   for the file-by-file breakdown and build instructions.
 - **[`Android/`](Android/)** — the Compose app. See
@@ -103,7 +110,7 @@ xcodebuild -project WorldClock.xcodeproj -scheme WorldClock_iOS \
 
 # Android — open in Android Studio, or from the command line:
 cd Android
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
 ---

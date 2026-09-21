@@ -44,6 +44,8 @@ same data.
   - `ClockRepository.kt` — SharedPreferences-backed persistence.
   - `ClockViewModel.kt` — entries, settings, selection, and the shared scrub
     offset — the Compose analogue of the iOS `ClockBoardViewModel`.
+  - `ClockFormat.kt` — shared time/offset-label formatting used by both the
+    board rows and the add-city picker.
   - `SkyMath.kt` / `SkyBackground.kt` — the sky illustration's math and
     Canvas drawing.
   - `TimeWheel.kt` — the draggable scrub wheel.
@@ -54,6 +56,9 @@ same data.
     `AddTimeZoneView`.
   - `SettingsScreen.kt` — the settings screen.
   - `MainActivity.kt` — wires it together with simple state-driven navigation.
+- `app/src/test/java/org/surajshetty/worldclockapp/` — JUnit tests for the sky
+  math, the wheel's offset label, country lookup, and the entries JSON
+  round-trip.
 
 ## Building
 
@@ -62,7 +67,7 @@ the command line:
 
 ```bash
 cd Android
-./gradlew :app:assembleDebug
+./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
 Requires an Android SDK with platform 35 installed (`compileSdk`/`targetSdk` = 35,

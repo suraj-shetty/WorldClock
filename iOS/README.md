@@ -21,7 +21,9 @@ cd iOS && xcodegen generate
 ## Structure
 
 - `WorldClockApp.swift` — app entry, SwiftData model container.
-- `DesignSystem/Theme.swift` — Nocturne colors, spacing, and radii.
+- `DesignSystem/Theme.swift` — Nocturne colors, spacing, radii, and
+  `ClockFormatting` (shared time/offset-label formatting used across the board,
+  the wheel, and the add-city picker).
 - `Models/ClockEntry.swift` — a saved city (timezone identifier, label, sort order).
 - `ViewModels/ClockBoardViewModel.swift` — selection state, wheel offset, and the
   anchor-swap logic that moves the sky/wheel between the device and a selected city.
@@ -35,7 +37,8 @@ cd iOS && xcodegen generate
   reflection).
 - `Views/AddTimeZoneView.swift` / `SettingsView.swift` — add-city search sheet and
   the 12/24-hour toggle.
-- `WorldClockTests/` — sky palette math and view-model offset/anchor tests.
+- `WorldClockTests/` — sky palette and sun/moon-arc math, the wheel's offset
+  label, `ClockFormatting`, and view-model offset/anchor tests.
 
 ## Testing
 
