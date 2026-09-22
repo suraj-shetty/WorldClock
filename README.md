@@ -113,6 +113,11 @@ cd Android
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
+## License
+
+All Rights Reserved. This source code is publicly viewable for reference only;
+commercial use is not permitted. See [LICENSE](LICENSE) for details.
+
 ---
 
 <div align="center">
