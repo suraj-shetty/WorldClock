@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/sky_widget_shape"
+    android:clipToOutline="true">
+
+    <ImageView
+        android:id="@+id/sky"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="centerCrop" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="#F3F5FE"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <!-- Formats are styled strings so AM/PM renders smaller than the digits. -->
+        <TextClock
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFeatureSettings="tnum"
+            android:format12Hour="@string/sky_widget_time_12h"
+            android:format24Hour="@string/sky_widget_time_24h"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:textColor="#F3F5FE"
+            android:textSize="40sp"
+            android:textStyle="bold" />
+
+        <TextClock
+            android:id="@+id/date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.75"
+            android:format12Hour="EEEE, d MMM"
+            android:format24Hour="EEEE, d MMM"
+            android:maxLines="1"
+            android:textColor="#F3F5FE"
+            android:textSize="13sp" />
+    </LinearLayout>
+</FrameLayout>

@@ -1,6 +1,20 @@
 package org.surajshetty.worldclockapp
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /** Colors and constants from the "Nocturne" design system — ported 1:1 from the
@@ -27,10 +41,28 @@ object Theme {
     }
 
     object Spacing {
-        val xs = 4.dp
-        val sm = 8.dp
-        val md = 12.dp
         val base = 16.dp
-        val lg = 20.dp
+    }
+}
+
+/** The rounded glass card every list row, field and panel sits on. */
+fun Modifier.card(fill: Color, stroke: Color, radius: Dp = Theme.Radius.row): Modifier {
+    val shape = RoundedCornerShape(radius)
+    return clip(shape).background(fill).border(1.dp, stroke, shape)
+}
+
+/** The round 40dp glass icon button used in every screen header. */
+@Composable
+fun CircleIconButton(icon: ImageVector, contentDescription: String?, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(Theme.glass.copy(alpha = 0.5f))
+            .border(1.dp, Theme.accent, CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(icon, contentDescription = contentDescription, tint = Theme.accentText, modifier = Modifier.size(18.dp))
     }
 }

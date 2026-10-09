@@ -19,19 +19,12 @@ enum Theme {
     static let glass = Color(hex: 0x121221)         // collapsed row / bottom wheel base
     static let glassExpanded = Color(hex: 0x10121e) // expanded row base
 
-    static var hairline: Color { text.opacity(0.13) }
-
     enum Radius {
         static let row: CGFloat = 14
         static let bottomWheel: CGFloat = 16
-        static let badge: CGFloat = 5
-        static let pill: CGFloat = 999
     }
 
     enum Spacing {
-        static let xs: CGFloat = 4
-        static let sm: CGFloat = 8
-        static let md: CGFloat = 12
         static let base: CGFloat = 16
         static let lg: CGFloat = 20
     }
@@ -63,6 +56,33 @@ enum ClockFormatting {
         return (String(format: "%d:%02d", displayHour, minute), hour < 12 ? "AM" : "PM")
     }
 
+    /// Fractional hour-of-day (0..<24) of `date` in `timeZone` — what the sky keys off.
+    static func hourOfDay(in timeZone: TimeZone, at date: Date) -> Double {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        let comps = calendar.dateComponents([.hour, .minute], from: date)
+        return Double(comps.hour ?? 0) + Double(comps.minute ?? 0) / 60
+    }
+
+    /// Same split, for `date` as seen in `zone`.
+    static func timeComponents(at date: Date, in zone: TimeZone, use24Hour: Bool) -> (main: String, period: String) {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = zone
+        let comps = calendar.dateComponents([.hour, .minute], from: date)
+        return timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
+    }
+
+    /// The home zone from its stored identifier ("" = device zone), and the label
+    /// it's shown under: the alias it was picked as (e.g. "Bengaluru" for
+    /// Asia/Kolkata), else the zone's own city name.
+    static func homeZone(_ identifier: String) -> TimeZone {
+        TimeZone(identifier: identifier) ?? .current
+    }
+
+    static func homeLabel(identifier: String, label: String) -> String {
+        label.isEmpty ? displayLabel(for: homeZone(identifier).identifier) : label
+    }
+
     /// "Home", "+3h", or "−1.5h" — how far a zone sits from home at a given moment,
     /// from each side's seconds-from-GMT offset.
     static func offsetLabel(homeOffsetSeconds: Int, zoneOffsetSeconds: Int) -> String {
@@ -79,5 +99,23 @@ enum ClockFormatting {
     /// An IANA identifier's representative city name, e.g. "Asia/Kolkata" -> "Kolkata".
     static func displayLabel(for identifier: String) -> String {
         identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? identifier
+    }
+}
+
+/// The round 40pt glass icon button used in every screen header.
+struct CircleIconButton: View {
+    let systemImage: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Theme.accentText)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(Theme.glass.opacity(0.5)))
+                .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
     }
 }

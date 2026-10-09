@@ -10,7 +10,11 @@ struct WorldClockApp: App {
     // session's saved cities instead of crash-looping the app on every launch.
     private static let container: ModelContainer = {
         let schema = Schema([ClockEntry.self])
-        if let onDisk = try? ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema)]) {
+        // `groupContainer: .none`: with an App Group entitlement (added for the widget),
+        // SwiftData's default silently relocates the store into the group container —
+        // starting every existing install over with an empty city list. The widget only
+        // needs the small SharedCities copy, so the store stays where it always was.
+        if let onDisk = try? ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, groupContainer: .none)]) {
             return onDisk
         }
         return try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])

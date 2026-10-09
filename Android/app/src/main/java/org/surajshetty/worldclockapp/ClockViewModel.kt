@@ -1,14 +1,10 @@
 package org.surajshetty.worldclockapp
 
-import android.app.Application
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import android.app.Application
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 
@@ -22,12 +18,6 @@ import java.time.ZoneId
 class ClockViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = ClockRepository(application)
 
-    // A single-threaded slice of Dispatchers.IO — saveSettings/saveEntries must land
-    // in the order they were called in, but separately `launch`ed coroutines on the
-    // full IO pool have no such guarantee, so two rapid edits could write their
-    // snapshots to disk out of order and silently revert the more recent one.
-    private val persistDispatcher = Dispatchers.IO.limitedParallelism(1)
-
     var entries by mutableStateOf(repository.loadEntries().sortedBy { it.sortOrder })
         private set
 
@@ -39,10 +29,9 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
     var selectedEntryId by mutableStateOf<String?>(null)
         private set
 
-    /** Shared scrub offset, in seconds — same value read by whichever wheel (global
-     * or a selected row's inline one) is currently mounted. */
+    /** Shared scrub offset, in seconds — same value read and written by whichever
+     * wheel (global or a selected row's inline one) is currently mounted. */
     var offset by mutableStateOf(0.0)
-        private set
 
     val homeTimeZone: ZoneId
         get() = settings.homeTimeZoneId
@@ -79,10 +68,6 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
         offset = 0.0
     }
 
-    fun updateOffset(seconds: Double) {
-        offset = seconds
-    }
-
     fun setHomeTimeZone(timeZoneId: String, label: String) {
         updateSettings { it.copy(homeTimeZoneId = timeZoneId, homeTimeZoneLabel = label) }
     }
@@ -95,8 +80,8 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
 
     fun updateSettings(transform: (AppSettings) -> AppSettings) {
         settings = transform(settings)
-        val snapshot = settings
-        viewModelScope.launch(persistDispatcher) { repository.saveSettings(snapshot) }
+        // SharedPreferences.apply(): in-order, memory now, disk in the background.
+        repository.saveSettings(settings)
     }
 
     /** The timezone the active wheel's tick labels are drawn in: the selected row's
@@ -107,18 +92,13 @@ class ClockViewModel(application: Application) : AndroidViewModel(application) {
         return runCatching { ZoneId.of(entry.timeZoneId) }.getOrDefault(homeTimeZone)
     }
 
-    fun displayInstant(now: Instant): Instant = now.plus(offsetDuration())
-
-    private fun offsetDuration(): Duration = Duration.ofNanos((offset * 1_000_000_000).toLong())
+    fun displayInstant(now: Instant): Instant = now.plusNanos((offset * 1_000_000_000).toLong())
 
     /** Fractional hour-of-day (0..<24) in the active anchor's timezone, at
      * `now + offset`. Feeds the sky background, which keys everything off this. */
     fun activeAnchorHour(now: Instant): Double = hourOfDay(anchorTimeZone(), displayInstant(now))
 
-    private fun persistEntries() {
-        val snapshot = entries
-        viewModelScope.launch(persistDispatcher) { repository.saveEntries(snapshot) }
-    }
+    private fun persistEntries() = repository.saveEntries(entries)
 
     companion object {
         fun hourOfDay(zone: ZoneId, instant: Instant): Double {

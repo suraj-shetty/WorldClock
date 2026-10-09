@@ -11,6 +11,7 @@ import org.json.JSONObject
  * this ever needs querying or sync.
  */
 class ClockRepository(context: Context) {
+    private val appContext = context.applicationContext
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun loadEntries(): List<ClockEntry> {
@@ -20,6 +21,7 @@ class ClockRepository(context: Context) {
 
     fun saveEntries(entries: List<ClockEntry>) {
         prefs.edit().putString(KEY_ENTRIES, serializeEntries(entries)).apply()
+        SkyWidget.refresh(appContext) // renamed/deleted cities show up on placed widgets
     }
 
     fun loadSettings(): AppSettings = AppSettings(

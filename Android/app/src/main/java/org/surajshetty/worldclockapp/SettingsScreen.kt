@@ -1,7 +1,7 @@
 package org.surajshetty.worldclockapp
 
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
@@ -57,13 +55,7 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = Theme.Spacing.base).padding(top = 12.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(Theme.glass.copy(alpha = 0.5f))
-                    .border(1.dp, Theme.accent, CircleShape).clickable(onClick = onDismiss),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Theme.accentText, modifier = Modifier.size(16.dp))
-            }
+            CircleIconButton(Icons.Default.ArrowBack, contentDescription = "Back", onClick = onDismiss)
             BasicText("Settings", style = TextStyle(color = Theme.text, fontSize = 29.sp, fontWeight = FontWeight.Medium, letterSpacing = (-0.5).sp))
         }
 
@@ -77,9 +69,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Theme.glass.copy(alpha = 0.5f))
-                        .border(1.dp, Theme.accent.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        .card(Theme.glass.copy(alpha = 0.5f), Theme.accent.copy(alpha = 0.5f))
                         .clickable(onClick = onOpenHomePicker)
                         .padding(15.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -125,9 +115,7 @@ fun SettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Theme.glass.copy(alpha = 0.5f))
-                        .border(1.dp, Theme.text.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+                        .card(Theme.glass.copy(alpha = 0.5f), Theme.text.copy(alpha = 0.13f))
                         .padding(6.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
@@ -179,9 +167,7 @@ private fun ToggleRow(title: String, subtitle: String, checked: Boolean, onCheck
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Theme.glass.copy(alpha = 0.5f))
-            .border(1.dp, Theme.text.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+            .card(Theme.glass.copy(alpha = 0.5f), Theme.text.copy(alpha = 0.13f))
             .padding(15.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -201,9 +187,7 @@ private fun InfoRow(title: String, value: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Theme.glass.copy(alpha = 0.5f))
-            .border(1.dp, Theme.text.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+            .card(Theme.glass.copy(alpha = 0.5f), Theme.text.copy(alpha = 0.13f))
             .padding(15.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

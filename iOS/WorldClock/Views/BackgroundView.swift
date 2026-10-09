@@ -478,17 +478,9 @@ private func drawBloom(_ context: inout GraphicsContext, size: CGSize, x: Double
             let cTop = lerp(lerp(p.hz, .white, 0.10 * (1 - ridge.ink) + lit * 0.12), skyInk, ridge.ink * 0.72)
             let cMid = lerp(p.hz, skyInk, ridge.ink)
             let cBot = lerp(p.mid, skyInk, min(1, ridge.ink + 0.12))
-            let path = ridgePath(ridge.points, in: rect)
-            if ridge.blur > 0.01 {
-                context.drawLayer { ctx in
-                    ctx.addFilter(.blur(radius: ridge.blur * scale))
-                    ctx.fill(path, with: .linearGradient(
-                        Gradient(stops: [.init(color: cTop, location: 0), .init(color: cMid, location: 0.38), .init(color: cBot, location: 1)]),
-                        startPoint: CGPoint(x: 0, y: rect.minY), endPoint: CGPoint(x: 0, y: rect.maxY)
-                    ))
-                }
-            } else {
-                context.fill(path, with: .linearGradient(
+            context.drawLayer { ctx in
+                if ridge.blur > 0.01 { ctx.addFilter(.blur(radius: ridge.blur * scale)) }
+                ctx.fill(ridgePath(ridge.points, in: rect), with: .linearGradient(
                     Gradient(stops: [.init(color: cTop, location: 0), .init(color: cMid, location: 0.38), .init(color: cBot, location: 1)]),
                     startPoint: CGPoint(x: 0, y: rect.minY), endPoint: CGPoint(x: 0, y: rect.maxY)
                 ))
@@ -526,14 +518,10 @@ private func drawBloom(_ context: inout GraphicsContext, size: CGSize, x: Double
                 let mirrored = ridge.points.map { (x: $0.x, y: 100 - $0.y) }
                 let color = lerp(waterFar, skyInk, 0.18 + Double(i) * 0.16)
                 let opacity = 0.9 - Double(i) * 0.12
-                let blur = 2.2 - Double(i) * 0.5
-                if blur > 0.01 {
-                    ctx.drawLayer { inner in
-                        inner.addFilter(.blur(radius: blur * scale))
-                        inner.fill(ridgePath(mirrored, in: reflRect), with: .color(color.opacity(opacity)))
-                    }
-                } else {
-                    ctx.fill(ridgePath(mirrored, in: reflRect), with: .color(color.opacity(opacity)))
+                let blur = 2.2 - Double(i) * 0.5 // 2.2, 1.7, 1.2: always blurred
+                ctx.drawLayer { inner in
+                    inner.addFilter(.blur(radius: blur * scale))
+                    inner.fill(ridgePath(mirrored, in: reflRect), with: .color(color.opacity(opacity)))
                 }
             }
 

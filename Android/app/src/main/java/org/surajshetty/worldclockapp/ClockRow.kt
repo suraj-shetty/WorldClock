@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -26,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.TextStyle
@@ -66,12 +65,9 @@ fun ClockRow(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(Theme.Radius.row))
-            .background(if (isSelected) Theme.glassExpanded.copy(alpha = 0.74f) else Theme.glass.copy(alpha = 0.48f))
-            .border(
-                width = 1.dp,
-                color = if (isSelected) Theme.accent else Theme.text.copy(alpha = 0.13f),
-                shape = RoundedCornerShape(Theme.Radius.row)
+            .card(
+                fill = if (isSelected) Theme.glassExpanded.copy(alpha = 0.74f) else Theme.glass.copy(alpha = 0.48f),
+                stroke = if (isSelected) Theme.accent else Theme.text.copy(alpha = 0.13f)
             )
             .clickable(onClick = onSelect)
             .animateContentSize(animationSpec = tween(300))
@@ -84,7 +80,7 @@ fun ClockRow(
                         Box(
                             modifier = Modifier
                                 .size(5.dp)
-                                .clip(RoundedCornerShape(50))
+                                .clip(CircleShape)
                                 .background(Theme.accent)
                         )
                     }

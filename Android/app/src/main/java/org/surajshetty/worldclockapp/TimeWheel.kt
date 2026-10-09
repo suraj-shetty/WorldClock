@@ -7,10 +7,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,10 +21,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -41,8 +42,6 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -98,15 +97,11 @@ fun TimeWheel(
     val metrics = if (style == WheelStyle.Bottom) WheelMetrics.bottom else WheelMetrics.inline
     val canvasHeight = if (style == WheelStyle.Bottom) 56.dp else 52.dp
 
-    // `pointerInput(Unit)` launches its gesture-detection coroutine once and never
-    // restarts it, so the drag closures below must read `offset` through this
-    // (always-current) State rather than closing over the composable's parameter
-    // directly — otherwise they'd keep using whatever `offset` was on first
-    // composition.
+    // The drag callbacks outlive a single composition, so they read `offset` through
+    // this always-current State. `dragOffset` accumulates the drag itself, since
+    // several drag events can land before `offset` recomposes back down.
     val currentOffset = rememberUpdatedState(offset)
-    val dragStartOffset = remember { mutableFloatStateOf(0f) }
-    val accumulatedDx = remember { mutableFloatStateOf(0f) }
-    val velocityTracker = remember { VelocityTracker() }
+    val dragOffset = remember { mutableDoubleStateOf(0.0) }
 
     fun animateTo(target: Double) {
         scope.launch {
@@ -127,36 +122,25 @@ fun TimeWheel(
                     .semantics { contentDescription = "Time scrub wheel: ${shiftedLabel(offset)}" }
                     .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                     .fadeMask(style)
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragStart = {
-                                dragStartOffset.floatValue = currentOffset.value.toFloat()
-                                accumulatedDx.floatValue = 0f
-                                velocityTracker.resetTracking()
-                            },
-                            onDrag = { change, dragAmount ->
-                                velocityTracker.addPosition(change.uptimeMillis, change.position)
-                                accumulatedDx.floatValue += dragAmount.x
-                                val raw = dragStartOffset.floatValue - (accumulatedDx.floatValue / pixelsPerMinute) * 60
-                                onOffsetChange(raw.toDouble())
-                            },
-                            onDragEnd = {
-                                val velocity = velocityTracker.calculateVelocity()
-                                val flingSeconds = 0.3
-                                // A flick's velocity projects a bit of extra glide before it
-                                // settles — the drag itself is unbounded (scrub as many days
-                                // forward/back as you like), but the glide is still capped so a
-                                // fast flick can't coast absurdly far past where the finger let go.
-                                val projectedDelta = -(velocity.x / pixelsPerMinute) * 60 * flingSeconds
-                                val maxGlide = 6 * 3600.0
-                                val clampedGlide = projectedDelta.toDouble().coerceIn(-maxGlide, maxGlide)
-                                val target = currentOffset.value + clampedGlide
-                                val snap = snapMinutes * 60.0
-                                val snapped = (target / snap).roundToLong() * snap
-                                animateTo(snapped)
-                            }
-                        )
-                    }
+                    .draggable(
+                        state = rememberDraggableState { dx ->
+                            dragOffset.doubleValue -= dx / pixelsPerMinute * 60.0
+                            onOffsetChange(dragOffset.doubleValue)
+                        },
+                        orientation = Orientation.Horizontal,
+                        onDragStarted = { dragOffset.doubleValue = currentOffset.value },
+                        onDragStopped = { velocity ->
+                            // A flick's velocity projects a bit of extra glide before it
+                            // settles — the drag itself is unbounded (scrub as many days
+                            // forward/back as you like), but the glide is capped so a fast
+                            // flick can't coast absurdly far past where the finger let go.
+                            val flingSeconds = 0.3
+                            val maxGlide = 6 * 3600.0
+                            val glide = (-(velocity / pixelsPerMinute) * 60 * flingSeconds).toDouble().coerceIn(-maxGlide, maxGlide)
+                            val snap = snapMinutes * 60.0
+                            animateTo(((currentOffset.value + glide) / snap).roundToLong() * snap)
+                        }
+                    )
             ) {
                 drawWheel(
                     offset = offset, anchorNow = anchorNow, anchorZone = anchorZone,
@@ -166,17 +150,11 @@ fun TimeWheel(
         }
     }
 
-    if (style == WheelStyle.Bottom) {
-        Box(
-            modifier = modifier
-                .clip(RoundedCornerShape(Theme.Radius.bottomWheel))
-                .background(Theme.glass.copy(alpha = 0.52f))
-                .border(1.dp, Theme.text.copy(alpha = 0.12f), RoundedCornerShape(Theme.Radius.bottomWheel))
-                .padding(vertical = 10.dp)
-        ) { content() }
-    } else {
-        Box(modifier = modifier) { content() }
-    }
+    // Only the bottom-bar mount has its own glass chrome; inline sits in its row.
+    val chrome = if (style == WheelStyle.Bottom) {
+        Modifier.card(Theme.glass.copy(alpha = 0.52f), Theme.text.copy(alpha = 0.12f), Theme.Radius.bottomWheel).padding(vertical = 10.dp)
+    } else Modifier
+    Box(modifier.then(chrome)) { content() }
 }
 
 @Composable
@@ -193,8 +171,8 @@ private fun LabelRow(offset: Double, anchorZone: ZoneId, style: WheelStyle, onNo
         AnimatedVisibility(visible = offset != 0.0, enter = fadeIn(), exit = fadeOut()) {
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .border(1.dp, Theme.accent, RoundedCornerShape(50))
+                    .clip(CircleShape)
+                    .border(1.dp, Theme.accent, CircleShape)
                     .clickable(onClick = onNow)
             ) {
                 BasicText(

@@ -21,15 +21,8 @@ struct ClockListView: View {
     @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
     @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
 
-    private var homeTimeZone: TimeZone {
-        homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
-    }
-
-    // The alias the user picked the home city under, falling back to the zone
-    // ID's own name when unset — see the identical fallback in SettingsView.
-    private var homeLabel: String {
-        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: homeTimeZone.identifier) : homeTimeZoneLabel
-    }
+    private var homeTimeZone: TimeZone { ClockFormatting.homeZone(homeTimeZoneIdentifier) }
+    private var homeLabel: String { ClockFormatting.homeLabel(identifier: homeTimeZoneIdentifier, label: homeTimeZoneLabel) }
 
     /// As many ~330pt columns as fit — 1 on an iPhone, more on an iPad or a wide Mac
     /// window — regardless of selection. A uniform grid (`LazyVGrid`) sizes every card
@@ -62,7 +55,7 @@ struct ClockListView: View {
             // everything else (rows, wheel) still scrubs normally.
             let skyHour = animateSky
                 ? viewModel.activeAnchorHour(entries: entries, now: now, homeTimeZone: homeTimeZone)
-                : ClockBoardViewModel.hourOfDay(in: homeTimeZone, at: now)
+                : ClockFormatting.hourOfDay(in: homeTimeZone, at: now)
 
             ZStack(alignment: .bottom) {
                 BackgroundView(hour: skyHour)
@@ -183,6 +176,8 @@ struct ClockListView: View {
                 }
             }
         }
+        // Keep the widget's city picker in sync with this list (adds, deletes, renames, reorders).
+        .task(id: entries.map(SharedCities.City.init)) { SharedCities.save(entries.map(SharedCities.City.init)) }
         .sheet(isPresented: $showingAddSheet) {
             AddTimeZoneView(
                 kicker: "\(entries.count) CITIES ON YOUR CLOCK",
@@ -215,25 +210,13 @@ struct ClockListView: View {
             }
             Spacer()
             HStack(spacing: 10) {
-                headerButton(systemImage: "gearshape") { showingSettings = true }
-                headerButton(systemImage: "plus") { showingAddSheet = true }
+                CircleIconButton(systemImage: "gearshape") { showingSettings = true }
+                CircleIconButton(systemImage: "plus") { showingAddSheet = true }
             }
         }
         .padding(.horizontal, Theme.Spacing.base)
         .padding(.top, 62)
         .padding(.bottom, 20)
-    }
-
-    private func headerButton(systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.accentText)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Theme.glass.opacity(0.5)))
-                .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
     }
 
     private func addEntry(identifier: String, label: String) {
@@ -377,10 +360,7 @@ private struct ClockRow: View {
 
     /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
     private var timeComponents: (main: String, period: String) {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = entry.timeZone
-        let comps = calendar.dateComponents([.hour, .minute], from: displayedDate)
-        return ClockFormatting.timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
+        ClockFormatting.timeComponents(at: displayedDate, in: entry.timeZone, use24Hour: use24Hour)
     }
 
     private var deltaLabel: String {

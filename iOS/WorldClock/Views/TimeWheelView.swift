@@ -21,12 +21,6 @@ struct TimeWheelView: View {
     private let limit: TimeInterval = 48 * 3600
 
     @State private var dragStartOffset: TimeInterval?
-    // Drives the post-release deceleration by hand: the ticks are drawn directly
-    // from `offset` inside a Canvas, which doesn't participate in SwiftUI's
-    // `withAnimation` interpolation the way a Shape or `.offset()` modifier would
-    // — a plain `withAnimation { offset = target }` would just jump. Stepping the
-    // value ourselves guarantees every intermediate frame actually redraws.
-    @State private var decelerationTask: Task<Void, Never>?
 
     private var metrics: WheelMetrics { style == .bottom ? .bottom : .inline }
     private var canvasHeight: CGFloat { style == .bottom ? 56 : 52 }
@@ -35,23 +29,29 @@ struct TimeWheelView: View {
         VStack(spacing: 8) {
             labelRow
 
-            Canvas { context, size in
-                drawWheel(context: &context, size: size)
-            }
+            WheelCanvas(offset: offset, anchorNow: anchorNow, anchorTimeZone: anchorTimeZone,
+                        use24Hour: use24Hour, metrics: metrics, pixelsPerMinute: pixelsPerMinute)
             .frame(height: canvasHeight)
             .contentShape(Rectangle())
             // `.gesture` alone loses to the row's own tap recognizer when this view is
             // mounted inline inside a row — `.simultaneousGesture` lets both fire.
             .simultaneousGesture(dragGesture)
             .mask(edgeFadeMask)
-            .modifier(WheelChrome(style: style))
+            .background {
+                // Only the bottom-bar mount has its own glass chrome; inline sits in its row.
+                if style == .bottom {
+                    RoundedRectangle(cornerRadius: Theme.Radius.bottomWheel, style: .continuous)
+                        .fill(Theme.glass.opacity(0.52))
+                        .stroke(Theme.text.opacity(0.12), lineWidth: 1)
+                }
+            }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Time scrub wheel")
             .accessibilityValue(shiftedLabel)
             .accessibilityAdjustableAction { direction in
                 switch direction {
-                case .increment: decelerate(to: min(offset + snapMinutes * 60, limit))
-                case .decrement: decelerate(to: max(offset - snapMinutes * 60, -limit))
+                case .increment: glide(to: min(offset + snapMinutes * 60, limit))
+                case .decrement: glide(to: max(offset - snapMinutes * 60, -limit))
                 @unknown default: break
                 }
             }
@@ -78,10 +78,7 @@ struct TimeWheelView: View {
 
     private var nowButton: some View {
         Button {
-            // Reuses the same manual step-based easing as the drag-release
-            // deceleration, not `withAnimation` — the Canvas ticks don't
-            // interpolate through SwiftUI's animation system either way.
-            decelerate(to: 0)
+            glide(to: 0)
         } label: {
             Text("Now")
                 .font(.system(size: 10, weight: .medium))
@@ -97,17 +94,15 @@ struct TimeWheelView: View {
         .transition(.opacity)
     }
 
-    // Only shown for the bottom (home) wheel, where anchorTimeZone is always the
-    // home zone — same alias fallback as SettingsView/ClockListView's homeLabel.
+    // Only shown for the bottom (home) wheel, where anchorTimeZone is always the home zone.
     private var homeLabel: String {
-        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: anchorTimeZone.identifier) : homeTimeZoneLabel
+        ClockFormatting.homeLabel(identifier: anchorTimeZone.identifier, label: homeTimeZoneLabel)
     }
 
     private var dragGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
                 if dragStartOffset == nil {
-                    decelerationTask?.cancel()
                     dragStartOffset = offset
                 }
                 let raw = (dragStartOffset ?? 0) - Double(value.translation.width / pixelsPerMinute) * 60
@@ -129,32 +124,15 @@ struct TimeWheelView: View {
                 let clampedGlide = min(max(rawTarget - releaseOffset, -maxGlide), maxGlide)
                 let target = min(max(releaseOffset + clampedGlide, -limit), limit)
                 let snapped = (target / snapMinutes / 60).rounded() * snapMinutes * 60
-                decelerate(to: min(max(snapped, -limit), limit))
+                glide(to: min(max(snapped, -limit), limit))
             }
     }
 
-    /// Eases `offset` from its current value to `target` over a fixed duration by
-    /// manually stepping it several times a second (see the comment on
-    /// `decelerationTask` for why this can't just be a `withAnimation`).
-    private func decelerate(to target: TimeInterval) {
-        decelerationTask?.cancel()
-        let start = offset
-        guard start != target else { return }
-        let duration = 0.5
-        let steps = 30
-        decelerationTask = Task { @MainActor in
-            for i in 1...steps {
-                if Task.isCancelled { return }
-                try? await Task.sleep(nanoseconds: UInt64(duration / Double(steps) * 1_000_000_000))
-                if Task.isCancelled { return }
-                let t = Double(i) / Double(steps)
-                let eased = 1 - pow(1 - t, 3) // ease-out cubic: fast start, gentle stop
-                offset = start + (target - start) * eased
-            }
-        }
+    /// The ticks glide via WheelCanvas's `animatableData`; the labels and rows bound
+    /// to `offset` update to the target straight away.
+    private func glide(to target: TimeInterval) {
+        withAnimation(.easeOut(duration: 0.5)) { offset = target }
     }
-
-    private var displayedDate: Date { anchorNow.addingTimeInterval(offset) }
 
     private var shiftedLabel: String { TimeWheelView.shiftedLabel(forOffset: offset) }
 
@@ -168,12 +146,57 @@ struct TimeWheelView: View {
         return minutes == 0 ? "Shifted by \(sign)\(magnitude)h" : "Shifted by \(sign)\(magnitude)h \(minutes)m"
     }
 
+    private var edgeFadeMask: some View {
+        let inset = style == .bottom ? 0.10 : 0.11
+        return LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: inset),
+                .init(color: .black, location: 1 - inset),
+                .init(color: .clear, location: 1),
+            ],
+            startPoint: .leading, endPoint: .trailing
+        )
+    }
+}
+
+private struct WheelMetrics {
+    let ticksBottomInset: CGFloat
+    let labelsBottomInset: CGFloat
+    let caretTopInset: CGFloat
+    let caretBottomInset: CGFloat
+    let triangleTopInset: CGFloat
+
+    static let bottom = WheelMetrics(ticksBottomInset: 21, labelsBottomInset: 2, caretTopInset: 5, caretBottomInset: 19, triangleTopInset: 1)
+    static let inline = WheelMetrics(ticksBottomInset: 19, labelsBottomInset: 0, caretTopInset: 3, caretBottomInset: 17, triangleTopInset: 0)
+}
+
+/// The tick tape. `Animatable` so `withAnimation { offset = ... }` eases the ticks
+/// frame by frame — a Canvas has no interpolatable state of its own (same trick as
+/// BackgroundView's layers).
+private struct WheelCanvas: View, Animatable {
+    var offset: TimeInterval
+    let anchorNow: Date
+    let anchorTimeZone: TimeZone
+    let use24Hour: Bool
+    let metrics: WheelMetrics
+    let pixelsPerMinute: CGFloat
+
+    var animatableData: TimeInterval {
+        get { offset }
+        set { offset = newValue }
+    }
+
+    var body: some View {
+        Canvas { context, size in drawWheel(context: &context, size: size) }
+    }
+
     private func drawWheel(context: inout GraphicsContext, size: CGSize) {
         let width = size.width, height = size.height
         let half = width / 2
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = anchorTimeZone
-        let display = displayedDate
+        let display = anchorNow.addingTimeInterval(offset)
 
         let halfRangeMinutes = Double(half / pixelsPerMinute) + 25
         let halfRangeSeconds = halfRangeMinutes * 60
@@ -238,51 +261,5 @@ struct TimeWheelView: View {
         if use24Hour { return String(format: "%02d:%02d", hour, isHour ? 0 : 30) }
         let hour12 = ((hour + 11) % 12) + 1
         return isHour ? "\(hour12) \(hour < 12 ? "AM" : "PM")" : "\(hour12):30"
-    }
-
-    private var edgeFadeMask: some View {
-        let inset = style == .bottom ? 0.10 : 0.11
-        return LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black, location: inset),
-                .init(color: .black, location: 1 - inset),
-                .init(color: .clear, location: 1),
-            ],
-            startPoint: .leading, endPoint: .trailing
-        )
-    }
-}
-
-private struct WheelMetrics {
-    let ticksBottomInset: CGFloat
-    let labelsBottomInset: CGFloat
-    let caretTopInset: CGFloat
-    let caretBottomInset: CGFloat
-    let triangleTopInset: CGFloat
-
-    static let bottom = WheelMetrics(ticksBottomInset: 21, labelsBottomInset: 2, caretTopInset: 5, caretBottomInset: 19, triangleTopInset: 1)
-    static let inline = WheelMetrics(ticksBottomInset: 19, labelsBottomInset: 0, caretTopInset: 3, caretBottomInset: 17, triangleTopInset: 0)
-}
-
-/// Only the bottom-bar mount has its own chrome (rounded glass bar); the inline
-/// mount sits directly in its row with no extra background/border.
-private struct WheelChrome: ViewModifier {
-    let style: TimeWheelView.Style
-
-    func body(content: Content) -> some View {
-        if style == .bottom {
-            content
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.Radius.bottomWheel, style: .continuous)
-                        .fill(Theme.glass.opacity(0.52))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.Radius.bottomWheel, style: .continuous)
-                        .stroke(Theme.text.opacity(0.12), lineWidth: 1)
-                )
-        } else {
-            content
-        }
     }
 }

@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">World Clock</string>
+    <string name="sky_widget_description">One of your cities, over its local sky.</string>
+    <string name="sky_widget_time_12h">h:mm<small><small> a</small></small></string>
+    <string name="sky_widget_time_24h">HH:mm</string>
 </resources>
