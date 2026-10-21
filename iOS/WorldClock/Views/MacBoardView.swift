@@ -56,7 +56,7 @@ struct MacBoardView: View {
             .ignoresSafeArea()
             // The glass light moves in the same 15-minute steps as the snap, so the panes
             // don't re-render their shadows on every frame of a scrub (PLAN performance rule 1).
-            .environment(\.glassLight, GlassLight(hour: (skyHour * 4).rounded() / 4))
+            .environment(\.glassLight, GlassLight(hour: (skyHour * 4).rounded() / 4, day: now))
         }
         .environment(\.colorScheme, .dark)
         .frame(minWidth: 760, minHeight: 560)
@@ -421,7 +421,7 @@ private struct MacCityCard: View {
 
     var body: some View {
         let time = ClockFormatting.timeComponents(at: displayDate, in: entry.timeZone, use24Hour: use24Hour)
-        let sky = CardSky(hour: ClockFormatting.hourOfDay(in: entry.timeZone, at: displayDate))
+        let sky = CardSky(hour: ClockFormatting.hourOfDay(in: entry.timeZone, at: displayDate), moonRise: MoonPhase(day: displayDate).rise)
         let day = ClockFormatting.dayOffset(of: entry.timeZone, from: homeTimeZone, at: displayDate)
         let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
 

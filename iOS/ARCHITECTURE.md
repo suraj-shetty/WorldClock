@@ -71,38 +71,34 @@ macOS the widget shows the local zone only, which avoids sandboxing the Mac app.
 
 ## The sky
 
-`BackgroundView(hour:)` is a pure function of one value: the hour of day. Everything
-it draws is derived from that number.
-
-**Today:** keyframed palettes interpolated by hour (`skyPalette`), a deterministic
-star field, sun and moon arcs (`sunMoonPosition`), clouds, haze, and two ridge
-shapes with a mirrored lake. It's drawn in `Canvas` layers, so the expensive parts
-don't redraw every second.
-
-**Planned:** the redesign splits the sky into a model and a renderer:
+`BackgroundView(hour:)` draws the canvas Sky board from two values: the hour of day,
+and today's date for the moon's phase. It's split into a model and a renderer:
 
 ```
-SkyLight(hour:, date:)                  pure, tested
-  sun  { t, alt, x, y }
-  moon { t, alt, x, y, age, illum, waxing }   real schedule for today's phase
-  light { source, colour, strength, dir, azimuth, elevation }
+SkyLight(hour:, day:)                    Sky/SkyLight.swift, pure, tested
+  palette    canvas keyframes, smoothstep between them
+  sun, moon  arc positions; the moon on its real schedule for today's phase
+  light      sun or moon, its colour and strength
         │
-        ├─▶ BackgroundView layers (Canvas + ShaderLibrary)
-        ├─▶ LitGlass modifier, through the environment
-        └─▶ ClockRow sun/moon arc, from each city's own hour
+        ├─▶ BackgroundView (Canvas + Sky/Sky.metal)
+        ├─▶ GlassLight ─▶ LitGlass, through the environment (Mac)
+        └─▶ CardSky, the Mac card's sun/moon arc, from each city's own hour
 ```
 
 - **One light source for everything.** The clouds, rock relief, snow, ridge rim
   light and the glass shadows all read the same `light`. That's what makes the scene
   look consistent.
-- **Rendering split.** Shapes use `Canvas`. Noise-based surfaces use Metal through
-  `ShaderLibrary`, from one `.metal` file. The reflection redraws the static layers,
-  flipped, through a ripple `.distortionEffect`.
-- **Lite tier.** The widget passes one flag that drops the shader layers and all
-  animation.
-- **Redraw rule.** Layers that use shaders redraw only when the light changes by a
-  15-minute step. Animated layers (stars, rays) are kept out of the reflection.
+- **Same numbers as the canvas.** Seeds, constants and mixes (rounded to whole sRGB
+  values, as the canvas rounds) are ported as they are. The noise surfaces (clouds,
+  rock, snow, Milky Way, regolith, ripple) run SVG's feTurbulence algorithm from the
+  spec, with the same seeded tables (`SkyNoise`). Against the canvas rendered in
+  Chrome at 6:30, 12:00, 16:30, 18:30 and 22:00, the mean difference is about 1 level
+  of 255 in every region.
+- **Redraw rule.** Like the canvas's main window, the whole static scene renders once
+  per 15-minute step and cross-fades to the next; steps that arrive mid-fade wait.
+  Only stars, rays and glints animate, in their own layers, never in the reflection.
   PLAN.md's "Performance rules" explains why.
+- **Widget.** `animated: false` draws one still frame, shaders included.
 
 ## Platform splits
 

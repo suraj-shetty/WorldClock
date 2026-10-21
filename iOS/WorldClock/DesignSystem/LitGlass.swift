@@ -2,7 +2,7 @@ import SwiftUI
 
 extension EnvironmentValues {
     /// Set once at the board's root, so every pane reads the same light (CLAUDE.md: one light source).
-    @Entry var glassLight = GlassLight(hour: 18.5)
+    @Entry var glassLight = GlassLight(hour: 18.5, day: .now)
 }
 
 /// The canvas's `.wc-glass`: a blurred dark pane whose sheen, edge highlight and

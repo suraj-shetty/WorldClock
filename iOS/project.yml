@@ -62,6 +62,7 @@ targets:
     sources:
       - path: WorldClockWidget
       - path: WorldClock/Views/BackgroundView.swift
+      - path: WorldClock/Sky
       - path: WorldClock/DesignSystem/Theme.swift
       - path: WorldClock/Models/ClockEntry.swift
       - path: WorldClock/Models/SharedCities.swift

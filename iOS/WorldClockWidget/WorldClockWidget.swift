@@ -140,7 +140,7 @@ struct SkyWidgetView: View {
         .foregroundStyle(Theme.textBright)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .containerBackground(for: .widget) {
-            BackgroundView(hour: ClockFormatting.hourOfDay(in: entry.zone, at: entry.date))
+            BackgroundView(hour: ClockFormatting.hourOfDay(in: entry.zone, at: entry.date), animated: false)
         }
     }
 }

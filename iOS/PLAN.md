@@ -42,7 +42,7 @@ the design, and the Mac window layout (phase 6 has its own plan).
 
 Each phase ends in a working, committed app. Run the tests before every commit.
 
-### 1. Light model: pure maths, no drawing
+### 1. Light model: pure maths, no drawing (done 2026-10-22)
 
 - Add `Sky/SkyLight.swift`: one value for "where is the light", computed from the
   hour and the date. It holds the sun and moon positions (arc t, altitude, x/y), the
@@ -61,7 +61,7 @@ Each phase ends in a working, committed app. Run the tests before every commit.
 **Done when:** the tests pass and `BackgroundView` draws the sky as before, apart
 from the moon now following its real schedule.
 
-### 2. Sky rendering, layer by layer
+### 2. Sky rendering, layer by layer (done 2026-10-22)
 
 Rebuild `BackgroundView` as stacked layers fed by `SkyLight`, in this order (the
 same order as the canvas):
@@ -91,6 +91,13 @@ same order as the canvas):
 
 **Done when:** the preview grid matches the canvas at those five hours, and the
 performance rules below hold.
+
+**Result:** checked by rendering the app's sky offscreen and the canvas in headless
+Chrome at the five hours, both 880×540, and diffing the pixels: about 1 level of 255
+mean difference per region, with only sub-point outlines left (the sun's rim, the
+moon's limb). Skipped as invisible at that level: the canvas's 0.3–0.6 pt blurs on
+craters and cloud coverage. The performance rules hold by construction (one render
+per 15-minute step); the frame-time numbers are phase 4, on a device.
 
 ### 3. Lit glass and cards
 
@@ -163,8 +170,7 @@ phases 1–5 automatically, because the sky and glass are shared.
 - The tall desktop widget that lists the whole board.
 - A live city time in the menu bar label ("TYO 10:00" on the canvas). It needs a
   label that doesn't loop; see CLAUDE.md.
-- The sky itself: the Mac window still draws today's sky, not the canvas Sky board.
-  That's phases 1–2, and it lands on the Mac automatically.
+- Phases 1–2 landed on 2026-10-22, so the Mac window now draws the canvas sky.
 
 ## Performance rules (learned on the canvas)
 

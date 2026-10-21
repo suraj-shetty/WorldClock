@@ -31,10 +31,11 @@ cd iOS && xcodegen generate
   and the global bottom wheel.
 - `Views/TimeWheelView.swift` — the draggable time ruler, mounted either as the
   bottom bar or inline inside a selected row.
-- `Views/BackgroundView.swift` — the sky: a `Canvas`-drawn illustration keyed to
-  hour-of-day (gradient keyframes, a deterministic star field, sun/moon discs with
-  CSS-accurate glow, clouds, haze, and a mountain/lake terrain layer with a mirrored
-  reflection).
+- `Sky/SkyLight.swift` — the sky's model: palette, sun arc, the moon's real phase
+  and schedule, and the light everything is lit from (also `GlassLight`, `CardSky`).
+- `Sky/Sky.metal` — feTurbulence noise, diffuse lighting and the lake ripple, as shaders.
+- `Views/BackgroundView.swift` — the sky, drawn layer by layer from the canvas Sky
+  board, rendered once per 15-minute step and cross-faded.
 - `Views/AddTimeZoneView.swift` / `SettingsView.swift` — add-city search sheet and
   the 12/24-hour toggle.
 - `DesignSystem/LitGlass.swift` — the canvas's lit glass: sheen, edge highlight and
