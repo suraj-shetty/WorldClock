@@ -20,10 +20,37 @@ struct WorldClockApp: App {
         return try! ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)])
     }()
 
+    #if os(macOS)
+    @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
+    #endif
+
     var body: some Scene {
+        #if os(macOS)
+        WindowGroup(id: "board") {
+            MacBoardView()
+        }
+        .modelContainer(Self.container)
+        .windowStyle(.hiddenTitleBar)
+        .defaultSize(width: 1384, height: 844)
+        .commands { BoardCommands() }
+
+        Settings {
+            MacSettingsView()
+        }
+        .modelContainer(Self.container)
+
+        // A fixed label on purpose: a live one (TimelineView + @Query) put the status item
+        // in a layout loop at 100% CPU, with every title/image change resizing the item,
+        // which re-ran the label. The city times live in the popover instead.
+        MenuBarExtra("World Clock", systemImage: "globe", isInserted: $showMenuBarExtra) {
+            MenuBarView().modelContainer(Self.container)
+        }
+        .menuBarExtraStyle(.window)
+        #else
         WindowGroup {
             ClockListView()
         }
         .modelContainer(Self.container)
+        #endif
     }
 }

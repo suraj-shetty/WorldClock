@@ -30,7 +30,7 @@ struct ClockListView: View {
     /// inline wheel) would either distort every column's row or force a collapse to a
     /// single column; masonry's independent per-column stacks avoid both: expanding a
     /// card only pushes down the cards below it in *that* column.
-    private func columnCount(for width: CGFloat) -> Int {
+    static func columnCount(for width: CGFloat) -> Int {
         max(1, Int((width + 10) / 330))
     }
 
@@ -38,7 +38,7 @@ struct ClockListView: View {
     /// entry 1 → column 1, ...). Not packed by actual height — that needs measuring
     /// each card first — but with rows this uniform in height when collapsed, a plain
     /// round-robin already keeps columns close to even.
-    private func columns(_ entries: [ClockEntry], count: Int) -> [[ClockEntry]] {
+    static func columns(_ entries: [ClockEntry], count: Int) -> [[ClockEntry]] {
         guard count > 1 else { return [entries] }
         var result = Array(repeating: [ClockEntry](), count: count)
         for (index, entry) in entries.enumerated() {
@@ -100,9 +100,9 @@ struct ClockListView: View {
                     // column — the rest of the board doesn't move.
                     GeometryReader { geometry in
                         ScrollView {
-                            let columnCount = columnCount(for: geometry.size.width)
+                            let columnCount = Self.columnCount(for: geometry.size.width)
                             HStack(alignment: .top, spacing: 10) {
-                                ForEach(Array(columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
+                                ForEach(Array(Self.columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
                                     // maxWidth: .infinity so the HStack splits its width evenly
                                     // across columns and each one grows/shrinks on rotation —
                                     // without it, a VStack shrinks to fit its widest row instead.
@@ -119,7 +119,7 @@ struct ClockListView: View {
                                                 entry: entry, now: now, use24Hour: use24Hour,
                                                 showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
                                                 homeTimeZone: homeTimeZone,
-                                                onDelete: { deleteEntry(entry) },
+                                                onDelete: { viewModel.delete(entry, from: modelContext) },
                                                 viewModel: viewModel
                                             )
                                                 // A swipe-to-delete action would install a horizontal drag
@@ -129,7 +129,7 @@ struct ClockListView: View {
                                                 // expanded state where the wheel is already using that drag.
                                                 .contextMenu {
                                                     Button(role: .destructive) {
-                                                        deleteEntry(entry)
+                                                        viewModel.delete(entry, from: modelContext)
                                                     } label: {
                                                         Label("Delete", systemImage: "trash")
                                                     }
@@ -186,7 +186,7 @@ struct ClockListView: View {
                 homeTimeZone: homeTimeZone,
                 use24Hour: use24Hour
             ) { identifier, label in
-                addEntry(identifier: identifier, label: label)
+                viewModel.add(identifier: identifier, label: label, after: entries, in: modelContext)
             }
         }
         .sheet(isPresented: $showingSettings) {
@@ -219,21 +219,6 @@ struct ClockListView: View {
         .padding(.bottom, 20)
     }
 
-    private func addEntry(identifier: String, label: String) {
-        let sortOrder = (entries.map(\.sortOrder).max() ?? -1) + 1
-        modelContext.insert(ClockEntry(timeZoneIdentifier: identifier, label: label, sortOrder: sortOrder))
-    }
-
-    /// Deleting the *selected* entry left `selectedEntryID` pointing at nothing —
-    /// `gridColumns` and the bottom-wheel visibility both key off "is something
-    /// selected", not "does the selected entry still exist", so the board was stuck
-    /// showing a single column with no way back to the grid and no bottom wheel.
-    private func deleteEntry(_ entry: ClockEntry) {
-        if viewModel.selectedEntryID == entry.id {
-            viewModel.deselect()
-        }
-        modelContext.delete(entry)
-    }
 }
 
 private struct ClockRow: View {
@@ -370,15 +355,8 @@ private struct ClockRow: View {
         )
     }
 
-    /// True when the entry's local calendar date (at the displayed moment) is a day
-    /// ahead of home's — e.g. it's still today at home but already tomorrow there.
     private var isNextDay: Bool {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = homeTimeZone
-        let homeDay = calendar.startOfDay(for: displayedDate)
-        calendar.timeZone = entry.timeZone
-        let entryDay = calendar.startOfDay(for: displayedDate)
-        return entryDay > homeDay
+        ClockFormatting.dayOffset(of: entry.timeZone, from: homeTimeZone, at: displayedDate) > 0
     }
 
     private var subtitle: String {

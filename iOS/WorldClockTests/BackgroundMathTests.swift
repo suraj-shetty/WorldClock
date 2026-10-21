@@ -52,6 +52,27 @@ final class BackgroundMathTests: XCTestCase {
         let noon = sunMoonPosition(forHour: 12)
         XCTAssertEqual(noon.sunUp, 1, accuracy: 0.001)
     }
+
+    func testGlassIsLitFromTheSunByDayAndTheMoonByNight() {
+        let noon = GlassLight(hour: 12)
+        XCTAssertTrue(noon.isSun)
+        XCTAssertEqual(noon.strength, 1, accuracy: 0.001)
+        XCTAssertLessThan(noon.dy, -0.9)                 // straight above the window
+        let evening = GlassLight(hour: 17)
+        XCTAssertGreaterThan(evening.dx, 0)              // low sun to the right
+        let midnight = GlassLight(hour: 0)
+        XCTAssertFalse(midnight.isSun)
+        XCTAssertGreaterThan(midnight.strength, 0)
+        XCTAssertLessThan(midnight.dy, 0)                // moon high, past its 18:00 rise
+    }
+
+    func testCardSkyLabelsFollowTheLocalHour() {
+        XCTAssertEqual(CardSky(hour: 6.5).label, "Sunrise")
+        XCTAssertEqual(CardSky(hour: 12).label, "Sun up")
+        XCTAssertEqual(CardSky(hour: 17.5).label, "Sunset")
+        XCTAssertEqual(CardSky(hour: 22).label, "Moon up")
+        XCTAssertEqual(CardSky(hour: 12).y, 2, accuracy: 0.001)   // top of the arc
+    }
 }
 
 final class TimeWheelLabelTests: XCTestCase {
@@ -69,6 +90,13 @@ final class TimeWheelLabelTests: XCTestCase {
 
     func testSubHourForwardOffset() {
         XCTAssertEqual(TimeWheelView.shiftedLabel(forOffset: 1800), "Shifted by +0h 30m")
+    }
+
+    func testRulerOffsetLabel() {
+        XCTAssertEqual(TimeWheelView.rulerOffsetLabel(forOffset: 0), "Now")
+        XCTAssertEqual(TimeWheelView.rulerOffsetLabel(forOffset: 900), "+0.25 h from now")
+        XCTAssertEqual(TimeWheelView.rulerOffsetLabel(forOffset: -5400), "\u{2212}1.5 h from now")
+        XCTAssertEqual(TimeWheelView.rulerOffsetLabel(forOffset: 7200), "+2 h from now")
     }
 
     func testWholeHourOffsets() {
@@ -102,6 +130,18 @@ final class ClockFormattingTests: XCTestCase {
     func testDisplayLabelExtractsCityFromIdentifier() {
         XCTAssertEqual(ClockFormatting.displayLabel(for: "Asia/Kolkata"), "Kolkata")
         XCTAssertEqual(ClockFormatting.displayLabel(for: "America/Los_Angeles"), "Los Angeles")
+    }
+
+    func testDayOffsetAheadBehindAndSame() {
+        let home = TimeZone(identifier: "Asia/Kolkata")!
+        // 2026-10-21 18:30 in Kolkata = 13:00 UTC.
+        let date = Date(timeIntervalSince1970: 1_792_587_600)
+        XCTAssertEqual(ClockFormatting.dayOffset(of: TimeZone(identifier: "Australia/Sydney")!, from: home, at: date), 1)   // 00:00 Wed
+        XCTAssertEqual(ClockFormatting.dayOffset(of: TimeZone(identifier: "Europe/London")!, from: home, at: date), 0)      // 14:00 Tue
+        XCTAssertEqual(ClockFormatting.dayOffset(of: TimeZone(identifier: "Pacific/Honolulu")!, from: home, at: date), 0)   // 03:00 Tue
+        // 01:00 in Kolkata (19:30 UTC the day before): Honolulu is still on the previous day.
+        let early = Date(timeIntervalSince1970: 1_792_524_600)
+        XCTAssertEqual(ClockFormatting.dayOffset(of: TimeZone(identifier: "Pacific/Honolulu")!, from: home, at: early), -1)
     }
 }
 

@@ -318,6 +318,70 @@ func sunMoonPosition(forHour h: Double) -> SunMoonPosition {
     return SunMoonPosition(sunT: sunT, sunUp: sunUp, sunO: sunO, moonT: moonT, moonUp: moonUp, moonO: moonO)
 }
 
+/// Where the glass is lit from, using the canvas Main window's light model: the sun's
+/// (or moon's) position on the same arc the sky draws, seen from the window's centre.
+/// `moonRise` is today's fixed 18:00 schedule until SkyLight brings the real one (PLAN phase 1).
+struct GlassLight: Equatable {
+    /// Unit vector from the window's centre toward the light, y pointing down.
+    let dx: Double, dy: Double
+    /// 0 (no light) … 1 (full sun).
+    let strength: Double
+    /// The light's altitude, 0 (horizon) … 1 (overhead).
+    let altitude: Double
+    let sunUp: Double
+    let isSun: Bool
+
+    /// The light's colour as a hex value: warm white high sun, amber low sun, cool moon.
+    var hex: UInt32 { isSun ? (sunUp > 0.5 ? 0xf6e6c4 : 0xf0b48a) : 0xcfc9f7 }
+
+    init(hour h: Double, moonRise: Double = 18) {
+        // The canvas window's proportions, so the angles match the design at any size.
+        let w = 1384.0, ht = 844.0
+        func arc(_ t: Double) -> (x: Double, y: Double, alt: Double) {
+            (w * (0.08 + 0.84 * t), ht * 0.71 - sin(.pi * t) * ht * 0.6, sin(.pi * t))
+        }
+        let hour = normalizedHour(h)
+        let sun = arc((hour - 6) / 12)
+        let moon = arc(normalizedHour(hour - moonRise) / 12)
+        let glow = clamp01((sun.alt + 0.12) / 0.35), sunUp = max(0, sun.alt)
+        let moonVis = clamp01((moon.alt + 0.04) / 0.12) * (1 - 0.68 * glow * min(1, sunUp * 2.5))
+        isSun = glow > 0.06
+        let light = isSun ? sun : moon
+        strength = isSun ? glow : 0.5 * moonVis
+        altitude = clamp01(light.alt)
+        self.sunUp = sunUp
+        let vx = light.x - w / 2, vy = light.y - ht / 2
+        let n = max(hypot(vx, vy), 1)
+        dx = vx / n
+        dy = vy / n
+    }
+}
+
+/// The small sun/moon arc on a Mac city card: where the light sits over that city,
+/// as a dot on a 34×18 arc, plus the words VoiceOver and the card show for it.
+struct CardSky: Equatable {
+    let isDay: Bool
+    let x: Double, y: Double
+    let label: String
+
+    init(hour h: Double, moonRise: Double = 18) {
+        let hour = normalizedHour(h), t = (hour - 6) / 12
+        if t >= 0 && t <= 1 {
+            let a = Double.pi * (1 - t)
+            isDay = true
+            x = 17 + 14 * cos(a)
+            y = 16 - 14 * sin(a)
+            label = t < 0.12 ? "Sunrise" : t > 0.88 ? "Sunset" : "Sun up"
+        } else {
+            let tm = normalizedHour(hour - moonRise) / 12, b = Double.pi * (1 - min(tm, 1))
+            isDay = false
+            x = 17 + 14 * cos(b)
+            y = tm <= 1 ? 16 - 14 * sin(b) : 16
+            label = tm <= 1 ? "Moon up" : "Night"
+        }
+    }
+}
+
 private func drawForeground(context: inout GraphicsContext, size: CGSize, hour h: Double) {
     let p = skyPalette(forHour: h)
     let w = size.width, ht = size.height

@@ -26,6 +26,19 @@ final class ClockBoardViewModel {
         offset = 0
     }
 
+    func add(identifier: String, label: String, after entries: [ClockEntry], in context: ModelContext) {
+        let sortOrder = (entries.map(\.sortOrder).max() ?? -1) + 1
+        context.insert(ClockEntry(timeZoneIdentifier: identifier, label: label, sortOrder: sortOrder))
+    }
+
+    /// Deleting the *selected* entry used to leave `selectedEntryID` pointing at nothing,
+    /// and the board keys "show the bottom wheel / grid" off "is something selected",
+    /// not "does it still exist", so it got stuck. Deselect first.
+    func delete(_ entry: ClockEntry, from context: ModelContext) {
+        if selectedEntryID == entry.id { deselect() }
+        context.delete(entry)
+    }
+
     func displayDate(now: Date) -> Date {
         now.addingTimeInterval(offset)
     }

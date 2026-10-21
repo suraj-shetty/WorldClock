@@ -6,7 +6,9 @@ import SwiftUI
 /// offset back via `offset`; the same view is mounted either as the global bottom bar
 /// or inline inside a selected row — see ClockListView.
 struct TimeWheelView: View {
-    enum Style { case bottom, inline }
+    /// `ruler` is the Mac timeline bar's tape (canvas Main window): hour and quarter-hour
+    /// ticks with the labels under them, and no label row; the bar draws its own.
+    enum Style { case bottom, inline, ruler }
 
     var anchorNow: Date
     var anchorTimeZone: TimeZone
@@ -23,20 +25,26 @@ struct TimeWheelView: View {
     @State private var dragStartOffset: TimeInterval?
 
     private var metrics: WheelMetrics { style == .bottom ? .bottom : .inline }
-    private var canvasHeight: CGFloat { style == .bottom ? 56 : 52 }
+    private var canvasHeight: CGFloat {
+        switch style { case .bottom: 56; case .inline: 52; case .ruler: 50 }
+    }
 
     var body: some View {
         VStack(spacing: 8) {
-            labelRow
+            if style != .ruler { labelRow }
 
             WheelCanvas(offset: offset, anchorNow: anchorNow, anchorTimeZone: anchorTimeZone,
-                        use24Hour: use24Hour, metrics: metrics, pixelsPerMinute: pixelsPerMinute)
+                        use24Hour: use24Hour, metrics: metrics, pixelsPerMinute: pixelsPerMinute,
+                        isRuler: style == .ruler)
             .frame(height: canvasHeight)
             .contentShape(Rectangle())
             // `.gesture` alone loses to the row's own tap recognizer when this view is
             // mounted inline inside a row — `.simultaneousGesture` lets both fire.
             .simultaneousGesture(dragGesture)
-            .mask(edgeFadeMask)
+            .mask {
+                // The ruler fades its ticks itself, so its hour labels stay fully visible.
+                if style == .ruler { Rectangle() } else { edgeFadeMask }
+            }
             .background {
                 // Only the bottom-bar mount has its own glass chrome; inline sits in its row.
                 if style == .bottom {
@@ -146,6 +154,16 @@ struct TimeWheelView: View {
         return minutes == 0 ? "Shifted by \(sign)\(magnitude)h" : "Shifted by \(sign)\(magnitude)h \(minutes)m"
     }
 
+    /// The Mac timeline bar's wording: "Now", "+0.25 h from now", "−1.5 h from now".
+    static func rulerOffsetLabel(forOffset offset: TimeInterval) -> String {
+        let quarters = Int((offset / 900).rounded())
+        if quarters == 0 { return "Now" }
+        let sign = quarters > 0 ? "+" : ClockFormatting.minusSign
+        let hours = Double(abs(quarters)) / 4
+        let number = hours == hours.rounded() ? String(Int(hours)) : String(hours)
+        return "\(sign)\(number) h from now"
+    }
+
     private var edgeFadeMask: some View {
         let inset = style == .bottom ? 0.10 : 0.11
         return LinearGradient(
@@ -181,6 +199,7 @@ private struct WheelCanvas: View, Animatable {
     let use24Hour: Bool
     let metrics: WheelMetrics
     let pixelsPerMinute: CGFloat
+    var isRuler = false
 
     var animatableData: TimeInterval {
         get { offset }
@@ -188,7 +207,9 @@ private struct WheelCanvas: View, Animatable {
     }
 
     var body: some View {
-        Canvas { context, size in drawWheel(context: &context, size: size) }
+        Canvas { context, size in
+            if isRuler { drawRuler(context: &context, size: size) } else { drawWheel(context: &context, size: size) }
+        }
     }
 
     private func drawWheel(context: inout GraphicsContext, size: CGSize) {
@@ -255,6 +276,45 @@ private struct WheelCanvas: View, Animatable {
         triangle.addLine(to: CGPoint(x: half, y: metrics.triangleTopInset + 5))
         triangle.closeSubpath()
         context.fill(triangle, with: .color(Theme.accent))
+    }
+
+    /// The canvas ruler: hour ticks in the light accent, quarter-hour ticks in faint white,
+    /// both fading over the outer 14%, hour labels under them, and the glowing caret.
+    private func drawRuler(context: inout GraphicsContext, size: CGSize) {
+        let width = size.width, half = width / 2
+        let tickHeight = size.height - 18
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = anchorTimeZone
+        let display = anchorNow.addingTimeInterval(offset)
+        let span = Double(half / pixelsPerMinute) * 60
+        var tick = Date(timeIntervalSinceReferenceDate: (display.addingTimeInterval(-span).timeIntervalSinceReferenceDate / 900).rounded(.down) * 900)
+        let end = display.addingTimeInterval(span)
+        let fadeWidth = width * 0.14
+        while tick <= end {
+            let dx = CGFloat(tick.timeIntervalSince(display) / 60) * pixelsPerMinute
+            let x = half + dx
+            let fade = min(1, max(0, min(x, width - x) / fadeWidth))
+            let isHour = calendar.component(.minute, from: tick) == 0
+            // Stripes start at the tick's x (CSS repeating-gradient), not centred on it.
+            context.fill(Path(CGRect(x: x, y: 0, width: isHour ? 1.5 : 1, height: tickHeight)),
+                         with: .color(isHour ? Theme.accentLight.opacity(0.8 * fade) : Theme.text.opacity(0.3 * fade)))
+            // ±7 h like the canvas, minus any label the bar's edge would cut in half.
+            if isHour, abs(dx) <= 7 * 60 * pixelsPerMinute, x > 22, x < width - 22 {
+                let hour = calendar.component(.hour, from: tick)
+                let label = use24Hour ? String(format: "%02d:00", hour) : "\((hour + 11) % 12 + 1) \(hour < 12 ? "AM" : "PM")"
+                context.draw(
+                    Text(label)
+                        .font(.system(size: 11).monospacedDigit())
+                        .foregroundColor(abs(dx) < 45 ? Theme.textBrightest : Theme.text.opacity(0.72)),
+                    at: CGPoint(x: x, y: size.height - 4), anchor: .bottom
+                )
+            }
+            tick = tick.addingTimeInterval(900)
+        }
+        context.drawLayer { ctx in
+            ctx.addFilter(.shadow(color: Theme.accent, radius: 6))
+            ctx.fill(Path(roundedRect: CGRect(x: half - 1, y: 0, width: 2, height: 34), cornerRadius: 1), with: .color(Theme.accent))
+        }
     }
 
     private func tickLabel(hour: Int, isHour: Bool) -> String {

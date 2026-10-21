@@ -10,9 +10,11 @@
 		0815BEA12598DF930E9970CD /* WorldClockWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		0850D7B4FE51D9371C2F861F /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0997B879CF5358644500B2 /* WorldClockWidget.swift */; };
 		0BB2956E12E18D61646508AB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		15494C3CAE9E444C364246F7 /* MacBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */; };
 		388F30C46895412C3B31A9B0 /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
 		3F2FFD64C5ABB9B7CB930CF5 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
 		4A3122E6B8B906903E53000E /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
+		4C8AB89D6DE2E5DDE15721BA /* MacPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A44E564E8885E2360BFBAB3 /* MacPanels.swift */; };
 		5BCF49F727B312C4F4181E84 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
 		5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
 		637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
@@ -22,16 +24,20 @@
 		84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
 		87A6E0EA32A4DD1017A5EFDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
 		8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		9303A6B1812924DCFED5F83D /* LitGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD804B111EBA246030F034A0 /* LitGlass.swift */; };
 		9563F9CD74727D9938275F6F /* BackgroundMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */; };
 		9AAB187593602F8618787083 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
 		9CBAF84C519937ECEDBCA1C6 /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0997B879CF5358644500B2 /* WorldClockWidget.swift */; };
+		A26D1FC756DBB202FA271B75 /* LitGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD804B111EBA246030F034A0 /* LitGlass.swift */; };
 		A9BAD53E29515BC02AE237D3 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
+		AC3FC2B5D2E543143C467584 /* MacBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */; };
 		B2E35D3E8747A7C1DED56009 /* WorldClockWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
 		BA9402595169F64E00BB1BE8 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
 		C7AD428D642B8FCBC20569D0 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
 		CEE30409D20D3CB5EECFFDAD /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
 		D428ABC21290F70415BFFB99 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
+		DD650C42D19B508F049982D7 /* MacPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A44E564E8885E2360BFBAB3 /* MacPanels.swift */; };
 		E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
 		EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
 		EA9339B39BDFD8D11C8ED1EC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
@@ -100,6 +106,7 @@
 		20D2A1BF89CE5E1AD79330EF /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorldClockWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockBoardViewModel.swift; sourceTree = "<group>"; };
+		3A44E564E8885E2360BFBAB3 /* MacPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPanels.swift; sourceTree = "<group>"; };
 		48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockEntry.swift; sourceTree = "<group>"; };
 		53E2392F6806DC338D023E4C /* WorldClock.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		65F511CCF49DC0E27B48D731 /* SharedCities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCities.swift; sourceTree = "<group>"; };
@@ -114,9 +121,11 @@
 		D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTimeZoneView.swift; sourceTree = "<group>"; };
 		D6883C86DBAFE9B20F3307E3 /* WorldClock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorldClock.entitlements; sourceTree = "<group>"; };
 		D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelView.swift; sourceTree = "<group>"; };
+		DD804B111EBA246030F034A0 /* LitGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LitGlass.swift; sourceTree = "<group>"; };
 		DF716C33CB766DE62DA10940 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = WorldClockWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2C4A35CACC525D4840BAA11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBoardView.swift; sourceTree = "<group>"; };
 		FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WorldClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -127,6 +136,8 @@
 				D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */,
 				108E7658E568871CDE8B276E /* BackgroundView.swift */,
 				1E1B05A67836F498146833A1 /* ClockListView.swift */,
+				FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */,
+				3A44E564E8885E2360BFBAB3 /* MacPanels.swift */,
 				865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */,
 				D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */,
 			);
@@ -144,6 +155,7 @@
 		1395B4340AAD52B14CB9B98D /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				DD804B111EBA246030F034A0 /* LitGlass.swift */,
 				20D2A1BF89CE5E1AD79330EF /* Theme.swift */,
 			);
 			path = DesignSystem;
@@ -417,6 +429,9 @@
 				84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */,
 				F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */,
 				EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */,
+				A26D1FC756DBB202FA271B75 /* LitGlass.swift in Sources */,
+				AC3FC2B5D2E543143C467584 /* MacBoardView.swift in Sources */,
+				DD650C42D19B508F049982D7 /* MacPanels.swift in Sources */,
 				B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */,
 				FBA31907CAB6CD5A542ADBD8 /* SharedCities.swift in Sources */,
 				8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */,
@@ -446,6 +461,9 @@
 				EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */,
 				E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */,
 				637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */,
+				9303A6B1812924DCFED5F83D /* LitGlass.swift in Sources */,
+				15494C3CAE9E444C364246F7 /* MacBoardView.swift in Sources */,
+				4C8AB89D6DE2E5DDE15721BA /* MacPanels.swift in Sources */,
 				5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */,
 				D428ABC21290F70415BFFB99 /* SharedCities.swift in Sources */,
 				0BB2956E12E18D61646508AB /* Theme.swift in Sources */,

@@ -37,6 +37,11 @@ cd iOS && xcodegen generate
   reflection).
 - `Views/AddTimeZoneView.swift` / `SettingsView.swift` — add-city search sheet and
   the 12/24-hour toggle.
+- `DesignSystem/LitGlass.swift` — the canvas's lit glass: sheen, edge highlight and
+  shadow driven by `GlassLight` (the sun/moon direction). Used by the Mac window today.
+- `Views/MacPanels.swift` — macOS only: the Settings window and the Add City dialog.
+- `Views/MacBoardView.swift` — macOS only: the window (sidebar, board, persistent
+  timeline bar), menu commands, and the menu bar extra's popover.
 - `WorldClockTests/` — sky palette and sun/moon-arc math, the wheel's offset
   label, `ClockFormatting`, and view-model offset/anchor tests.
 

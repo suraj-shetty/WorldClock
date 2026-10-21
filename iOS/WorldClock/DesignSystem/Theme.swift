@@ -96,6 +96,21 @@ enum ClockFormatting {
         return minutes == 0 ? "\(sign)\(hours)h" : "\(sign)\(hours).\(tenths)h"
     }
 
+    /// How many calendar days `zone` is ahead of (+1) or behind (−1) `home` at `date`:
+    /// e.g. still today at home but already tomorrow there.
+    static func dayOffset(of zone: TimeZone, from home: TimeZone, at date: Date) -> Int {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = home
+        let homeDay = calendar.dateComponents([.year, .month, .day], from: date)
+        calendar.timeZone = zone
+        let zoneDay = calendar.dateComponents([.year, .month, .day], from: date)
+        // Compare the two wall-calendar dates in a fixed zone, so DST in either zone can't skew the count.
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(identifier: "UTC")!
+        guard let a = utc.date(from: homeDay), let b = utc.date(from: zoneDay) else { return 0 }
+        return utc.dateComponents([.day], from: a, to: b).day ?? 0
+    }
+
     /// An IANA identifier's representative city name, e.g. "Asia/Kolkata" -> "Kolkata".
     static func displayLabel(for identifier: String) -> String {
         identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? identifier
