@@ -111,6 +111,14 @@ enum ClockFormatting {
         return utc.dateComponents([.day], from: a, to: b).day ?? 0
     }
 
+    /// A short code for the menu bar: initials for a multi-word name ("New York" → "NY",
+    /// "Ho Chi Minh City" → "HCM"), else the first three letters ("Tokyo" → "TOK").
+    static func cityCode(for label: String) -> String {
+        let words = label.split(whereSeparator: { $0 == " " || $0 == "-" })
+        let code = words.count > 1 ? String(words.prefix(3).compactMap(\.first)) : String(label.prefix(3))
+        return code.uppercased()
+    }
+
     /// An IANA identifier's representative city name, e.g. "Asia/Kolkata" -> "Kolkata".
     static func displayLabel(for identifier: String) -> String {
         identifier.split(separator: "/").last.map { $0.replacingOccurrences(of: "_", with: " ") } ?? identifier

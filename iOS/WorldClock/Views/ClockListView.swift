@@ -177,7 +177,9 @@ struct ClockListView: View {
             }
         }
         // Keep the widget's city picker in sync with this list (adds, deletes, renames, reorders).
-        .task(id: entries.map(SharedCities.City.init)) { SharedCities.save(entries.map(SharedCities.City.init)) }
+        .task(id: SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel)) {
+            SharedCities.save(SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel))
+        }
         .sheet(isPresented: $showingAddSheet) {
             AddTimeZoneView(
                 kicker: "\(entries.count) CITIES ON YOUR CLOCK",

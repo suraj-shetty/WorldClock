@@ -78,11 +78,13 @@ struct SkyPalette: Equatable {
 }
 
 /// A point on the sun/moon arc, in fractions of the sky's width and height.
+/// It tops out at 0.26, not the canvas's 0.11: there the Mac's header and first row of
+/// cards hid the sun from about 10:00 to 14:00.
 struct SkyArcPoint: Equatable {
     let x, y, alt: Double
     init(t: Double) {
         x = 0.08 + 0.84 * t
-        y = 0.71 - sin(.pi * t) * 0.6
+        y = 0.71 - sin(.pi * t) * 0.45
         alt = sin(.pi * t)
     }
 }

@@ -39,6 +39,8 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleIconName: AppIcon
         UILaunchScreen: {}
+        # Read by SharedCities on macOS, where app groups are team-prefixed.
+        AppGroup: $(TeamIdentifierPrefix)org.surajshetty.worldclockapp
     settings:
       base:
         PRODUCT_NAME: WorldClock
@@ -48,9 +50,10 @@ targets:
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        # App Group shared with the widget (SharedCities). iOS only: the macOS widget
-        # just shows the local zone, which avoids sandboxing the macOS app.
+        # App Group shared with the widget (SharedCities). The macOS app joins its
+        # team-prefixed group without being sandboxed; only the widget is.
         "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": WorldClock/WorldClock.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": WorldClock/WorldClock-macOS.entitlements
 
   # Home-screen (iOS) / desktop (macOS) widget. Built for both platforms only
   # because the app target is — XcodeGen can't make the app's dependency on it
@@ -62,6 +65,7 @@ targets:
     sources:
       - path: WorldClockWidget
       - path: WorldClock/Views/BackgroundView.swift
+      - path: WorldClock/Views/SkyMotion.swift
       - path: WorldClock/Sky
       - path: WorldClock/DesignSystem/Theme.swift
       - path: WorldClock/Models/ClockEntry.swift
@@ -75,6 +79,7 @@ targets:
         CFBundleDisplayName: WorldClock
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        AppGroup: $(TeamIdentifierPrefix)org.surajshetty.worldclockapp
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

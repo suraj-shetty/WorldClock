@@ -165,12 +165,26 @@ phases 1–5 automatically, because the sky and glass are shared.
 - A menu bar extra: a static globe icon, and a popover with the home sky, every
   city with its offset and Tomorrow/Yesterday, and Open, Settings and Quit.
 
+Also done (2026-10-22):
+
+- Phases 1–2, so the Mac window draws the canvas sky.
+- The widgets built to the canvas Widgets board, plus the board widget (the canvas's
+  "Tall"). WidgetKit has no tall, narrow size, so it is the large size, in two
+  columns past four rows. The Mac widget now gets the saved cities and home through
+  a team-prefixed App Group.
+- A live city time in the menu bar label ("TOK 10:00"; the canvas shows "TYO"), with
+  the city picked in Settings › Menu Bar. Codes are initials or the first three
+  letters, not airport codes.
+- Sky motion moved to Core Animation: 25% CPU at rest down to 0.1%.
+- Checked live: arrow keys and a mouse's horizontal wheel on the timeline, the Add
+  City keys (↑↓, ↩, ⌘↩, esc), the popover from the real status item, its peek ruler
+  and items, and the menu bar city setting. Fixed on the way: Add City's list showed
+  stale rows after a search, and the popover opened a second board window.
+
 **Still to do:**
 
-- The tall desktop widget that lists the whole board.
-- A live city time in the menu bar label ("TYO 10:00" on the canvas). It needs a
-  label that doesn't loop; see CLAUDE.md.
-- Phases 1–2 landed on 2026-10-22, so the Mac window now draws the canvas sky.
+- A two-finger trackpad swipe, tested on a real trackpad (it can't be synthesised).
+- Adding the widgets to the desktop and checking them there.
 
 ## Performance rules (learned on the canvas)
 

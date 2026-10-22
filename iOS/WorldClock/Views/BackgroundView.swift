@@ -9,32 +9,49 @@ import SwiftUI
 /// Full-bleed sky for `hour` (0..<24 in the active anchor's zone).
 ///
 /// Like the canvas's main window, the scene is rendered once per 15-minute step and
-/// cross-faded to the next, so scrubbing never redraws the shader layers per frame
-/// (PLAN performance rule 1). Newer steps that arrive mid-fade wait for it to finish,
-/// then the latest one is shown. Only stars, rays and glints animate, in their own layers.
+/// faded to the next, so scrubbing never redraws the shader layers per frame (PLAN
+/// performance rule 1). The new step fades in over the old one, which stays opaque until
+/// it's removed: a symmetric crossfade left both half transparent and the window showed
+/// through mid-fade, a visible flicker on every step. The two slots keep a fixed order:
+/// swapping their zIndex reordered the layers and redrew the shown frame, flashing the sky
+/// through its unfinished front. So a new step in the upper slot fades in, and one in the
+/// lower slot waits underneath while the old one fades out. Either way it gets a moment to
+/// draw before it shows. Newer steps that arrive mid-fade
+/// wait for it to finish, then the latest one is shown.
 struct BackgroundView: View {
     var hour: Double
     /// Off for the widget: WidgetKit snapshots a still frame, so twinkle and sway would be wasted.
     var animated = true
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var shown: Double?
+    /// Two frames' steps, slot 1 above slot 0: `top` is the one shown, the other is only
+    /// there during a fade.
+    @State private var slots: [Double?] = [nil, nil]
+    @State private var opacities = [1.0, 1.0]
+    @State private var top = 0
     @State private var latest: Double?
     @State private var fading = false
 
     private var step: Double { normalizedHour((normalizedHour(hour) * 4).rounded() / 4) }
 
     var body: some View {
-        let h = shown ?? step
         // The phase is sampled per day (PLAN performance rule 3), so this is stable across renders.
-        let day = Int(Date.now.timeIntervalSince1970 / 86400)
+        let day = Date(timeIntervalSince1970: (Date.now.timeIntervalSince1970 / 86400).rounded(.down) * 86400 + 43200)
+        let shown = slots[top] == nil ? [step, nil] : slots
         ZStack {
-            SkyFrame(hour: h, day: day, animated: animated && !reduceMotion)
-                .id(h)
-                .transition(.opacity)
+            ForEach(0..<2, id: \.self) { i in
+                if let h = shown[i] {
+                    SkyFrame(step: h, hour: hour, day: day, animated: animated && !reduceMotion)
+                        .id(h)
+                        // Fade the frame as one picture. Per layer, the sky showed through
+                        // the half-faded mountains (up to 25% at mid-fade).
+                        .compositingGroup()
+                        .opacity(opacities[i])
+                }
+            }
         }
         .ignoresSafeArea()
-        .onAppear { shown = step }
+        .onAppear { if slots[top] == nil { slots[top] = step } }
         .onChange(of: step) { _, new in
             latest = new
             advance()
@@ -42,80 +59,107 @@ struct BackgroundView: View {
     }
 
     private func advance() {
-        guard !fading, let target = latest, target != shown else { return }
+        guard !fading, let target = latest, target != slots[top] else { return }
         fading = true
         let fade = animated && !reduceMotion ? 0.46 : 0
-        withAnimation(.easeInOut(duration: fade)) { shown = target }
+        let old = top, new = 1 - top
+        var instant = Transaction()
+        instant.disablesAnimations = true
+        // 0.001, not 0: a fully transparent layer isn't drawn, so it wouldn't get ahead.
+        withTransaction(instant) {
+            slots[new] = target
+            opacities[new] = new == 1 && fade > 0 ? 0.001 : 1
+        }
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(fade + 0.04))
+            if fade > 0 {
+                try? await Task.sleep(for: .seconds(0.1))
+                withAnimation(.easeInOut(duration: fade)) {
+                    if new == 1 { opacities[1] = 1 } else { opacities[1] = 0 }
+                }
+                try? await Task.sleep(for: .seconds(fade + 0.04))
+            }
+            withTransaction(instant) {
+                top = new
+                slots[old] = nil
+                opacities[old] = 1
+            }
             fading = false
             advance()
         }
     }
 }
 
-/// One rendered step: the static back (sky, Milky Way), the animated stars and rays, the
-/// static front (everything from the bloom down to the lake), then the animated glints.
+/// One rendered step: the static back (sky, Milky Way, bloom), the animated stars and
+/// rays, the sun and moon, the static front (clouds down to the lake), then the animated glints.
 private struct SkyFrame: View {
-    let hour: Double
-    let day: Int
+    let step, hour: Double
+    let day: Date
     let animated: Bool
 
     var body: some View {
-        let light = SkyLight(hour: hour, day: Date(timeIntervalSince1970: Double(day) * 86400 + 43200))
+        let light = SkyLight(hour: step, day: day)
         ZStack {
-            StaticSky(light: light, front: false).equatable()
-            Ticking(animated: animated, active: light.palette.star > 0.02 || light.glow > 0.02) { time in
-                Canvas { context, size in
-                    let sky = SkyRenderer(light, size: size)
-                    sky.drawStars(&context, time: time)
-                    sky.drawRays(&context, time: time, sway: animated)
-                }
+            StaticSky(light: light, part: .back).equatable()
+            if animated {
+                SkyMotion(light: light, part: .below)
+            } else {
+                StaticSky(light: light, part: .stillBelow).equatable()
             }
-            StaticSky(light: light, front: true).equatable()
-            Ticking(animated: animated, active: light.light.alt > -0.03 && light.strength > 0.05) { time in
-                Canvas { context, size in
-                    let sky = SkyRenderer(light, size: size)
-                    sky.drawGlints(&context, time: time)
-                    sky.drawGhosts(&context)
-                }
+            SkyBodies(drawn: light, live: SkyLight(hour: hour, day: day))
+            StaticSky(light: light, part: .front).equatable()
+            if animated {
+                SkyMotion(light: light, part: .glints)
+            } else {
+                StaticSky(light: light, part: .stillGlints).equatable()
             }
         }
-        .background(light.palette.top.color)
     }
 }
 
-/// Redraws its content ten times a second while something there moves; a still frame otherwise.
-private struct Ticking<Content: View>: View {
-    let animated: Bool
-    let active: Bool
-    @ViewBuilder var content: (Double) -> Content
+/// The sun and moon, drawn at the frame's step but placed at the live hour. Baked into the
+/// stepped frame they jumped 15 minutes at a time (about 25 pt) while scrubbing; an offset
+/// glides them for the cost of a transform.
+private struct SkyBodies: View {
+    let drawn, live: SkyLight
 
     var body: some View {
-        if animated {
-            TimelineView(.animation(minimumInterval: 0.1, paused: !active)) { timeline in
-                content(timeline.date.timeIntervalSinceReferenceDate)
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            ZStack {
+                StaticSky(light: drawn, part: .moon).equatable()
+                    .offset(x: w * (live.moon.x - drawn.moon.x), y: h * (live.moon.y - drawn.moon.y))
+                StaticSky(light: drawn, part: .sun).equatable()
+                    .offset(x: w * (live.sun.x - drawn.sun.x), y: h * (live.sun.y - drawn.sun.y))
             }
-        } else {
-            content(0)
         }
+        // A step changes inside the fade's animation; the offset must not ride it.
+        .transaction { $0.animation = nil }
+        .allowsHitTesting(false)
     }
 }
 
 /// The expensive layers. Equatable on the light alone, so the board's 1-second ticks
 /// never redraw it; only a new 15-minute step (a new SkyFrame) or a resize does.
 private struct StaticSky: View, Equatable {
+    enum Part { case back, moon, sun, front, stillBelow, stillGlints }
     let light: SkyLight
-    let front: Bool
+    let part: Part
 
     var body: some View {
-        Canvas(opaque: !front) { context, size in
+        Canvas { context, size in
             let sky = SkyRenderer(light, size: size)
-            if front {
-                sky.drawFront(&context)
-                sky.drawLake(&context)
-            } else {
+            switch part {
+            case .back:
                 sky.drawBack(&context)
+                sky.drawBloom(&context)
+            case .moon: sky.drawMoon(&context)
+            case .sun: sky.drawSun(&context)
+            case .front:
+                sky.drawFront(&context, bodies: false)
+                sky.drawLake(&context)
+                sky.drawGhosts(&context)
+            case .stillBelow: sky.drawStillBelow(&context)
+            case .stillGlints: sky.drawStillGlints(&context)
             }
         }
     }
@@ -189,17 +233,35 @@ private func gradient(_ stops: [(RGB, Double, Double)]) -> Gradient {
     Gradient(stops: stops.map { .init(color: $0.0.color($0.1), location: $0.2) })
 }
 
-/// SMIL `values="o;o·lo;o"`: down and back up once per `duration`, offset by `begin`.
-private func twinkle(_ o: Double, _ lo: Double, duration: Double, begin: Double, time: Double) -> Double {
-    let phase = ((time - begin).truncatingRemainder(dividingBy: duration) + duration).truncatingRemainder(dividingBy: duration) / duration
-    let dip = o * lo
-    return phase < 0.5 ? o + (dip - o) * phase * 2 : dip + (o - dip) * (phase - 0.5) * 2
+/// One twinkling shape, as SMIL `values="o;o·lo;o"`: down and back up once per
+/// `duration`, starting `begin` seconds in.
+struct Twinkle {
+    let path: Path
+    let color: RGB
+    let opacity, low, duration, begin: Double
+
+    func value(at time: Double) -> Double {
+        let phase = ((time - begin).truncatingRemainder(dividingBy: duration) + duration).truncatingRemainder(dividingBy: duration) / duration
+        let dip = opacity * low
+        return phase < 0.5 ? opacity + (dip - opacity) * phase * 2 : dip + (opacity - dip) * (phase - 0.5) * 2
+    }
+}
+
+struct RayFan {
+    let center: CGPoint
+    let radius: Double
+    let core, glow: RGB
+    let rays: [Twinkle]
+    let opacity, blur: Double
+
+    /// The rays' radial fade, from a white-hot core out to nothing.
+    var stops: [(RGB, Double, Double)] { [(core, 0.95, 0), (glow, 0.6, 0.12), (glow, 0.22, 0.38), (glow, 0.06, 0.7), (glow, 0, 1)] }
 }
 
 private func oneDecimal(_ v: Double) -> Double { (v * 10).rounded() / 10 }
 
 /// Draws one SkyLight at one size. Every number below is the canvas's.
-private struct SkyRenderer {
+struct SkyRenderer {
     let L: SkyLight
     let p: SkyPalette
     let W, H, m, sc, hor, lakeY: Double
@@ -275,67 +337,97 @@ private struct SkyRenderer {
         }
     }
 
-    // MARK: Animated: stars and rays (between the back and the front, never in the reflection)
+    // MARK: Animated layers: stars and rays (below the front), glints (above it)
+    // Their geometry, shared by the Core Animation layers (SkyMotion) and the still frame.
 
-    func drawStars(_ ctx: inout GraphicsContext, time: Double) {
-        guard p.star > 0.02 else { return }
+    var starOpacity: Double { clamp01(p.star * 1.1) }
+
+    var stars: [Twinkle] {
+        guard p.star > 0.02 else { return [] }
         let rnd = seededRandom(9301)
         let tints: [UInt32] = [0xf3f5fe, 0xd4ddff, 0xfff0d8, 0xffdcc8, 0xe9ecff]
-        ctx.group(opacity: clamp01(p.star * 1.1)) { layer in
-            for _ in 0..<110 {
-                let o = 0.3 + rnd() * 0.7, big = rnd()
-                let x = rnd() * W, y = rnd() * hor * 0.85
-                let r = (0.35 + big * big * big * 1.5) * (m / 540 + 0.4)
-                let fill = RGB(tints[Int(rnd() * 5)])
-                let lo = 0.2 + rnd() * 0.3, dur = oneDecimal(2.5 + rnd() * 5), begin = oneDecimal(-rnd() * 8)
-                layer.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
-                           with: .color(fill.color(twinkle(o, lo, duration: dur, begin: begin, time: time))))
+        return (0..<110).map { _ in
+            let o = 0.3 + rnd() * 0.7, big = rnd()
+            let x = rnd() * W, y = rnd() * hor * 0.85
+            let r = (0.35 + big * big * big * 1.5) * (m / 540 + 0.4)
+            let fill = RGB(tints[Int(rnd() * 5)])
+            let lo = 0.2 + rnd() * 0.3, dur = oneDecimal(2.5 + rnd() * 5), begin = oneDecimal(-rnd() * 8)
+            return Twinkle(path: Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
+                           color: fill, opacity: o, low: lo, duration: dur, begin: begin)
+        }
+    }
+
+    /// The sun's rays: a fan around the sun (paths relative to it), swaying ±1.5° over 47 s.
+    var rayFan: RayFan? {
+        guard L.glow > 0.02 else { return nil }
+        let rr = seededRandom(4242), rayR = max(W, H) * 1.25
+        let upF = clamp01((0.45 - L.sunUp) / 0.45)
+        let rays = (0..<34).map { _ in
+            let u = rr(), fan = -Double.pi * (0.06 + 0.88 * u), all = u * .pi * 2
+            let angle = fan * upF + all * (1 - upF)
+            let width = 0.006 + pow(rr(), 2.2) * 0.05, length = rayR * (0.45 + rr() * 0.55), o = 0.25 + rr() * 0.75
+            let lo = 0.45 + rr() * 0.3, dur = oneDecimal(7 + rr() * 9), begin = oneDecimal(-rr() * 12)
+            var ray = Path()
+            ray.move(to: .zero)
+            ray.addLine(to: point(cos(angle - width) * length, sin(angle - width) * length))
+            ray.addLine(to: point(cos(angle + width) * length, sin(angle + width) * length))
+            ray.closeSubpath()
+            return Twinkle(path: ray, color: glowC, opacity: o, low: lo, duration: dur, begin: begin)
+        }
+        return RayFan(center: sun, radius: rayR, core: glowC.mix(RGB(0xffffff), 0.5), glow: glowC, rays: rays,
+                      opacity: L.glow * (0.14 + 0.5 * upF * upF), blur: max(0.6, m * 0.009))
+    }
+
+    var glints: [Twinkle] {
+        guard L.light.alt > -0.03 && ls > 0.05 else { return [] }
+        let gr = seededRandom(55), lr = L.usesSun ? rs : rm, depth = H - lakeY
+        return (0..<9).map { _ in
+            let gy = lakeY + 4 + pow(gr(), 1.4) * (depth - 6)
+            let spread = 1 + (gy - lakeY) / depth
+            let gw = lr * (0.3 + gr() * 0.9) * spread, go = ls * (0.35 + gr() * 0.5)
+            let x = light.x - gw / 2 + (gr() - 0.5) * lr * 2 * spread
+            let h = 0.8 + gr(), dur = oneDecimal(0.9 + gr() * 1.6), begin = oneDecimal(-gr() * 3)
+            return Twinkle(path: Path(roundedRect: CGRect(x: x, y: gy, width: gw, height: h), cornerRadius: 0.6),
+                           color: RGB(0xfffaf0), opacity: go, low: 0.1, duration: dur, begin: begin)
+        }
+    }
+
+    /// Stars and rays as one still frame, for the widget and Reduce Motion.
+    func drawStillBelow(_ ctx: inout GraphicsContext) {
+        ctx.group(opacity: starOpacity) { l in
+            for star in stars { l.fill(star.path, with: .color(star.color.color(star.value(at: 0)))) }
+        }
+        guard let fan = rayFan else { return }
+        let shading = GraphicsContext.Shading.radialGradient(
+            gradient(fan.stops), center: .zero, startRadius: 0, endRadius: fan.radius)
+        ctx.group(opacity: fan.opacity, blend: .screen) { l in
+            l.addFilter(.blur(radius: fan.blur))
+            l.translateBy(x: fan.center.x, y: fan.center.y)
+            for ray in fan.rays {
+                var single = l
+                single.opacity = ray.value(at: 0)
+                single.fill(ray.path, with: shading)
             }
         }
     }
 
-    func drawRays(_ ctx: inout GraphicsContext, time: Double, sway: Bool) {
-        guard L.glow > 0.02 else { return }
-        let rr = seededRandom(4242), rayR = max(W, H) * 1.25
-        let upF = clamp01((0.45 - L.sunUp) / 0.45)
-        let core = glowC.mix(RGB(0xffffff), 0.5)
-        let shading = GraphicsContext.Shading.radialGradient(
-            gradient([(core, 0.95, 0), (glowC, 0.6, 0.12), (glowC, 0.22, 0.38), (glowC, 0.06, 0.7), (glowC, 0, 1)]),
-            center: .zero, startRadius: 0, endRadius: rayR)
-        // The canvas sways the fan ±1.5° over 47 s.
-        let phase = time.truncatingRemainder(dividingBy: 47) / 47
-        let swayDegrees = sway ? (phase < 0.5 ? -1.5 + 3 * phase * 2 : 1.5 - 3 * (phase - 0.5) * 2) : 0
-        ctx.group(opacity: L.glow * (0.14 + 0.5 * upF * upF), blend: .screen) { layer in
-            layer.addFilter(.blur(radius: max(0.6, m * 0.009)))
-            layer.translateBy(x: sun.x, y: sun.y)
-            layer.rotate(by: .degrees(swayDegrees))
-            for _ in 0..<34 {
-                let u = rr(), fan = -Double.pi * (0.06 + 0.88 * u), all = u * .pi * 2
-                let angle = fan * upF + all * (1 - upF)
-                let width = 0.006 + pow(rr(), 2.2) * 0.05, length = rayR * (0.45 + rr() * 0.55), o = 0.25 + rr() * 0.75
-                let lo = 0.45 + rr() * 0.3, dur = oneDecimal(7 + rr() * 9), begin = oneDecimal(-rr() * 12)
-                var ray = Path()
-                ray.move(to: .zero)
-                ray.addLine(to: point(cos(angle - width) * length, sin(angle - width) * length))
-                ray.addLine(to: point(cos(angle + width) * length, sin(angle + width) * length))
-                ray.closeSubpath()
-                var single = layer
-                single.opacity = twinkle(o, lo, duration: dur, begin: begin, time: time)
-                single.fill(ray, with: shading)
-            }
+    func drawStillGlints(_ ctx: inout GraphicsContext) {
+        ctx.group(blend: .screen) { l in
+            for glint in glints { l.fill(glint.path, with: .color(glint.color.color(glint.value(at: 0)))) }
         }
     }
 
     // MARK: Front: bloom, moon, sun, clouds, haze, ranges, trees
 
-    func drawFront(_ ctx: inout GraphicsContext) {
-        let sunUp = L.sunUp, glow = L.glow
-        let aureole = RGB(0xffc48a).mix(RGB(0xffffff), sunUp)
-        ctx.fill(full, .radialGradient(
-            gradient([(aureole, 0.35 + 0.4 * sunUp * glow, 0), (glowC, 0.4 * glow, 0.12), (glowC, 0.16 * glow, 0.45), (glowC, 0, 1)]),
-            center: sun, startRadius: 0, endRadius: max(W, H) * 0.6))
-        drawMoon(&ctx)
-        drawSun(&ctx)
+    /// `bodies: false` leaves the bloom, moon and sun to their own layers (SkyBodies); the
+    /// lake reflection keeps them, stepped (PLAN rule 2).
+    func drawFront(_ ctx: inout GraphicsContext, bodies: Bool = true) {
+        let glow = L.glow
+        if bodies {
+            drawBloom(&ctx)
+            drawMoon(&ctx)
+            drawSun(&ctx)
+        }
         drawClouds(&ctx)
         ctx.fill(CGRect(x: 0, y: hor - H * 0.2, width: W, height: H * 0.2 + 2), .linearGradient(
             gradient([(p.haze, 0, 0), (p.haze, 0.75, 1)]), startPoint: point(0, hor - H * 0.2), endPoint: point(0, hor + 2)))
@@ -346,12 +438,20 @@ private struct SkyRenderer {
         drawTrees(&ctx)
     }
 
+    func drawBloom(_ ctx: inout GraphicsContext) {
+        let sunUp = L.sunUp, glow = L.glow
+        let aureole = RGB(0xffc48a).mix(RGB(0xffffff), sunUp)
+        ctx.fill(full, .radialGradient(
+            gradient([(aureole, 0.35 + 0.4 * sunUp * glow, 0), (glowC, 0.4 * glow, 0.12), (glowC, 0.16 * glow, 0.45), (glowC, 0, 1)]),
+            center: sun, startRadius: 0, endRadius: max(W, H) * 0.6))
+    }
+
     private var rim: GraphicsContext.Shading {
         .radialGradient(gradient([(lightC, 0.95 * ls, 0), (lightC, 0.35 * ls, 0.55), (lightC, 0, 1)]),
                         center: light, startRadius: 0, endRadius: W * 0.42)
     }
 
-    private func drawSun(_ ctx: inout GraphicsContext) {
+    func drawSun(_ ctx: inout GraphicsContext) {
         let sunUp = L.sunUp, vis = clamp01((L.sun.alt + 0.1) / 0.12)
         guard vis > 0.001 else { return }
         let squash = 0.84 + 0.16 * clamp01(L.sun.alt / 0.18), sry = rs * squash
@@ -413,7 +513,7 @@ private struct SkyRenderer {
         }
     }
 
-    private func drawMoon(_ ctx: inout GraphicsContext) {
+    func drawMoon(_ ctx: inout GraphicsContext) {
         let vis = L.moonVisibility
         guard vis > 0.001 else { return }
         let phase = L.moonPhase, illum = phase.illumination
@@ -737,23 +837,7 @@ private struct SkyRenderer {
         ctx.fill(CGRect(x: 0, y: lakeY, width: W, height: 1), .color(lightC.color(0.35 * ls)))
     }
 
-    // MARK: Animated: glints and lens ghosts
-
-    func drawGlints(_ ctx: inout GraphicsContext, time: Double) {
-        guard L.light.alt > -0.03 && ls > 0.05 else { return }
-        let gr = seededRandom(55), lr = L.usesSun ? rs : rm, depth = H - lakeY
-        ctx.group(blend: .screen) { l in
-            for _ in 0..<9 {
-                let gy = lakeY + 4 + pow(gr(), 1.4) * (depth - 6)
-                let spread = 1 + (gy - lakeY) / depth
-                let gw = lr * (0.3 + gr() * 0.9) * spread, go = ls * (0.35 + gr() * 0.5)
-                let x = light.x - gw / 2 + (gr() - 0.5) * lr * 2 * spread
-                let h = 0.8 + gr(), dur = oneDecimal(0.9 + gr() * 1.6), begin = oneDecimal(-gr() * 3)
-                l.fill(Path(roundedRect: CGRect(x: x, y: gy, width: gw, height: h), cornerRadius: 0.6),
-                       with: .color(RGB(0xfffaf0).color(twinkle(go, 0.1, duration: dur, begin: begin, time: time))))
-            }
-        }
-    }
+    // MARK: Lens ghosts
 
     func drawGhosts(_ ctx: inout GraphicsContext) {
         let alpha = 0.12 * L.sunUp * L.glow

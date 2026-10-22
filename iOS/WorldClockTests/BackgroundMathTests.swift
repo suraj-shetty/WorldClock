@@ -126,6 +126,13 @@ final class ClockFormattingTests: XCTestCase {
         XCTAssertEqual(ClockFormatting.displayLabel(for: "America/Los_Angeles"), "Los Angeles")
     }
 
+    func testCityCode() {
+        XCTAssertEqual(ClockFormatting.cityCode(for: "Tokyo"), "TOK")
+        XCTAssertEqual(ClockFormatting.cityCode(for: "New York"), "NY")
+        XCTAssertEqual(ClockFormatting.cityCode(for: "Ho Chi Minh City"), "HCM")
+        XCTAssertEqual(ClockFormatting.cityCode(for: "Port-au-Prince"), "PAP")
+    }
+
     func testDayOffsetAheadBehindAndSame() {
         let home = TimeZone(identifier: "Asia/Kolkata")!
         // 2026-10-21 18:30 in Kolkata = 13:00 UTC.

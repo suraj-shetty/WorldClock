@@ -54,9 +54,12 @@ gitignored, so never commit it or a team ID.
   design: `MacBoardView` (window, city card, menu bar popover) and `MacPanels`
   (Settings, Add City). They still share the sky, `LitGlass`, the masonry columns,
   `TimeWheelView` (its `.ruler` style), `ClockFormatting` and the view model.
-- **Menu bar extra label stays static.** A live label (`TimelineView` + `@Query`)
-  put the status item in a 100% CPU layout loop. Live content belongs in the
-  popover.
+- **The menu bar label reads only `MenuBarClock`.** A label built from `TimelineView` +
+  `@Query` put the status item in a 100% CPU layout loop. `MenuBarClock` publishes a
+  new string only when it changes (on the minute, or when cities or settings do).
+- **Sky motion runs in Core Animation.** Stars, rays and glints are `SkyMotion` layers.
+  A SwiftUI timeline driving them re-rendered the whole window ten times a second
+  (25% CPU at rest on a Mac, against 0.1% now).
 - **Pure logic takes "now" as a parameter.** Never read `Date.now` inside view-model
   or sky maths; that's what keeps them testable. Date-based sky values (moon phase)
   are sampled per day, so they stay stable across renders.

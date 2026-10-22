@@ -89,7 +89,9 @@ struct MacBoardView: View {
             toggleSidebar: { withAnimation(.easeInOut(duration: 0.25)) { showingSidebar.toggle() } },
             findCity: { showingSidebar = true; filterFocused = true }
         ))
-        .task(id: entries.map(SharedCities.City.init)) { SharedCities.save(entries.map(SharedCities.City.init)) }
+        .task(id: SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel)) {
+            SharedCities.save(SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel))
+        }
         .sheet(isPresented: $showingAddSheet) {
             MacAddCityView(
                 existingLabels: Set(entries.map(\.label)),
@@ -113,7 +115,14 @@ struct MacBoardView: View {
     /// has no scroll-gesture API, hence the event monitor. Momentum is swallowed, so
     /// the snap isn't undone by the coast that follows it.
     private func swipe(_ event: NSEvent) -> NSEvent? {
-        guard hoveringTimeline, event.hasPreciseScrollingDeltas else { return event }
+        guard hoveringTimeline else { return event }
+        // A mouse's horizontal wheel (or shift + wheel): one snap step per notch.
+        if !event.hasPreciseScrollingDeltas {
+            let delta = event.scrollingDeltaX != 0 ? event.scrollingDeltaX : (event.modifierFlags.contains(.shift) ? event.scrollingDeltaY : 0)
+            guard delta != 0 else { return event }
+            step(delta < 0 ? 1 : -1)
+            return nil
+        }
         if event.momentumPhase != [] { return nil }
         guard abs(event.scrollingDeltaX) >= abs(event.scrollingDeltaY) || event.phase == .ended else { return event }
         let limit: TimeInterval = 48 * 3600, snap = Double(snapMinutes) * 60
@@ -592,6 +601,63 @@ struct BoardCommands: Commands {
 
 // MARK: - Menu bar extra
 
+/// The menu bar label's text, e.g. "TOK 10:00". A live label built from TimelineView +
+/// @Query put the status item in a 100% CPU layout loop: every resize re-ran the label,
+/// which resized it again. This publishes a new string only when it actually changes
+/// (on the minute, or when the cities or settings do), so a resize has nothing to re-run.
+@MainActor @Observable
+final class MenuBarClock {
+    private(set) var title = ""
+    @ObservationIgnored private var timer: Timer?
+    @ObservationIgnored private var observer: NSObjectProtocol?
+
+    init() {
+        refresh()
+        observer = NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
+        let nextMinute = Calendar.current.nextDate(after: .now, matching: DateComponents(second: 0), matchingPolicy: .nextTime) ?? .now
+        let timer = Timer(fire: nextMinute, interval: 60, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refresh() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        self.timer = timer
+    }
+
+    private func refresh() {
+        let defaults = UserDefaults.standard
+        let choice = defaults.string(forKey: "menuBarCityID") ?? ""
+        let cities = SharedCities.load()
+        let home = SharedCities.loadHome()
+        // "" is the default: the first saved city, as on the canvas; "none" keeps just the globe.
+        let pick: (label: String, identifier: String)? = switch choice {
+        case "none": nil
+        case "home": (home.label, home.identifier)
+        case "": cities.first.map { ($0.label, $0.identifier) }
+        default: cities.first { $0.id == choice }.map { ($0.label, $0.identifier) }
+        }
+        var new = ""
+        if let pick, let zone = TimeZone(identifier: pick.identifier) {
+            let time = ClockFormatting.timeComponents(at: .now, in: zone, use24Hour: defaults.bool(forKey: "use24Hour"))
+            new = "\(ClockFormatting.cityCode(for: pick.label)) \(time.main)"
+        }
+        if new != title { title = new }
+    }
+}
+
+struct MenuBarLabel: View {
+    let clock: MenuBarClock
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "globe")
+            if !clock.title.isEmpty {
+                Text(clock.title).monospacedDigit()
+            }
+        }
+        .accessibilityLabel(clock.title.isEmpty ? "World Clock" : "World Clock, \(clock.title)")
+    }
+}
+
 extension Notification.Name {
     /// The menu bar popover's "Add City…": opens the board window, which shows its sheet.
     static let addCityRequested = Notification.Name("WorldClock.addCityRequested")
@@ -601,6 +667,7 @@ extension Notification.Name {
 /// peek-ahead ruler that shifts every time shown here, and the app's three entry points.
 struct MenuBarView: View {
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
     @Query(sort: \ClockEntry.sortOrder) private var entries: [ClockEntry]
     @AppStorage("use24Hour") private var use24Hour = false
     @AppStorage("snapMinutes") private var snapMinutes = 15
@@ -667,20 +734,30 @@ struct MenuBarView: View {
                         NotificationCenter.default.post(name: .addCityRequested, object: nil)
                     }
                     .keyboardShortcut("n")
-                    SettingsLink { MenuItemLabel(title: "Settings…", shortcut: "⌘,") }
-                        .buttonStyle(.plain)
-                        .keyboardShortcut(",")
+                    MenuItem(title: "Settings…", shortcut: "⌘,") {
+                        closePopover()
+                        openSettings()
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+                    .keyboardShortcut(",")
                 }
                 .padding(6)
                 .overlay(alignment: .top) { Rectangle().fill(.white.opacity(0.10)).frame(height: 1) }
             }
             .frame(width: 340)
             .background(Theme.glass.opacity(0.62))
+            // Each opening starts at Now.
+            .onDisappear { peek = 0 }
             .environment(\.colorScheme, .dark)
         }
     }
 
+    /// MenuBarExtra's window style has no dismiss action; like a menu, the popover should
+    /// go away once you pick something, so it closes its own (key) window.
+    private func closePopover() { NSApp.keyWindow?.close() }
+
     private func openBoard() {
+        closePopover()
         openWindow(id: "board")
         NSApp.activate(ignoringOtherApps: true)
     }

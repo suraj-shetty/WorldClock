@@ -66,8 +66,11 @@ changes. It writes only on an actual change, then reloads the widget timelines. 
 widget's city picker (`CityEntity` / `CityQuery`) reads only that copy.
 
 The widget's timeline has one entry per minute and covers 3 hours, with a reload
-requested every hour. That keeps the widget ticking if iOS delays a reload. On
-macOS the widget shows the local zone only, which avoids sandboxing the Mac app.
+requested every hour. That keeps the widget ticking if iOS delays a reload. The home
+city is mirrored the same way, for offsets. On macOS the group is team-prefixed
+(`<team>.org.surajshetty.worldclockapp`, stamped into Info.plist as `AppGroup`), which
+needs no provisioning profile; the Mac app joins it without being sandboxed. The
+menu bar label reads the same copy.
 
 ## The sky
 
@@ -97,7 +100,13 @@ SkyLight(hour:, day:)                    Sky/SkyLight.swift, pure, tested
 - **Redraw rule.** Like the canvas's main window, the whole static scene renders once
   per 15-minute step and cross-fades to the next; steps that arrive mid-fade wait.
   Only stars, rays and glints animate, in their own layers, never in the reflection.
-  PLAN.md's "Performance rules" explains why.
+  The new step fades in over the old one as one composited picture (or the old one fades
+  out over it), so nothing dips or shows through mid-fade. The sun and moon
+  (`SkyBodies`) are drawn per step but offset to the live hour, so they glide while
+  scrubbing. PLAN.md's
+  "Performance rules" explains why.
+- **One departure from the canvas.** The arc tops out at 0.26 of the height, not 0.11,
+  so the midday sun clears the Mac's header and first row of cards.
 - **Widget.** `animated: false` draws one still frame, shaders included.
 
 ## Platform splits

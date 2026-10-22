@@ -1,6 +1,7 @@
 #if os(macOS)
 import SwiftUI
 import ServiceManagement
+import SwiftData
 
 // The Mac's Settings window and Add City dialog, built to the canvas's Settings and
 // Add City boards. iPhone/iPad keep SettingsView and AddTimeZoneView: the Mac design
@@ -111,10 +112,30 @@ private struct MacGeneralSettings: View {
 
 private struct MacMenuBarSettings: View {
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
+    @AppStorage("menuBarCityID") private var menuBarCityID = ""
+    @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
+    @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
+    @Query(sort: \ClockEntry.sortOrder) private var entries: [ClockEntry]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             SettingsGroup("Menu bar") {
                 toggleRow("Show in menu bar", "Keep a city's time beside the system clock.", $showMenuBarExtra)
+                RowDivider()
+                SettingsRow {
+                    rowText("City beside the clock", "Shown as a short code, like TOK 10:00.")
+                    Picker("City beside the clock", selection: $menuBarCityID) {
+                        Text("First city").tag("")
+                        Text("Home · \(ClockFormatting.homeLabel(identifier: homeTimeZoneIdentifier, label: homeTimeZoneLabel))").tag("home")
+                        Divider()
+                        ForEach(entries) { Text($0.label).tag($0.id.uuidString) }
+                        Divider()
+                        Text("None, just the icon").tag("none")
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                    .disabled(!showMenuBarExtra)
+                }
             }
             Spacer()
         }
@@ -276,6 +297,9 @@ struct MacAddCityView: View {
     @State private var selected = 0
     @State private var added: Set<String> = []
     @FocusState private var searchFocused: Bool
+    /// The rows' clock, a minute at a time. A TimelineView around the list only re-ran on
+    /// its own tick, so a new search didn't reach the rows until the next minute.
+    @State private var now = Date.now
 
     private var results: [TimeZoneOption] {
         guard !search.isEmpty else { return AddTimeZoneView.allOptions }
@@ -314,19 +338,22 @@ struct MacAddCityView: View {
 
             ScrollViewReader { proxy in
                 ScrollView {
-                    TimelineView(.periodic(from: .now, by: 60)) { timeline in
-                        LazyVStack(spacing: 2) {
-                            ForEach(Array(rows.enumerated()), id: \.element.id) { index, option in
-                                resultRow(option, now: timeline.date, isSelected: index == selected)
-                                    .id(index)
-                                    .onTapGesture { selected = index }
-                                    .onTapGesture(count: 2) { selected = index; commit(keepOpen: false) }
-                            }
+                    LazyVStack(spacing: 2) {
+                        ForEach(Array(rows.enumerated()), id: \.element.id) { index, option in
+                            // Keyed by city, not position: keyed by index, the lazy stack kept
+                            // showing the old row 0 after a new search.
+                            resultRow(option, now: now, isSelected: index == selected)
+                                .id(option.id)
+                                // Double first, or the single tap wins before a double can be recognised.
+                                .onTapGesture(count: 2) { selected = index; commit(keepOpen: false) }
+                                .onTapGesture { selected = index }
                         }
-                        .padding(.horizontal, 8)
                     }
+                    .padding(.horizontal, 8)
                 }
-                .onChange(of: selected) { _, index in proxy.scrollTo(index) }
+                .onChange(of: selected) { _, index in
+                    if rows.indices.contains(index) { proxy.scrollTo(rows[index].id) }
+                }
             }
 
             HStack(spacing: 10) {
@@ -351,6 +378,12 @@ struct MacAddCityView: View {
         .background(.ultraThinMaterial)
         .environment(\.colorScheme, .dark)
         .onAppear { searchFocused = true }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60 - Double(Calendar.current.component(.second, from: .now))))
+                now = .now
+            }
+        }
         .onChange(of: search) { selected = 0 }
     }
 

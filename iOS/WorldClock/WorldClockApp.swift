@@ -22,11 +22,14 @@ struct WorldClockApp: App {
 
     #if os(macOS)
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
+    @State private var menuBarClock = MenuBarClock()
     #endif
 
     var body: some Scene {
         #if os(macOS)
-        WindowGroup(id: "board") {
+        // One board window, not a WindowGroup: the menu bar's Open and Add City call
+        // openWindow(id:), which on a group opened a second board every time.
+        Window("World Clock", id: "board") {
             MacBoardView()
         }
         .modelContainer(Self.container)
@@ -39,11 +42,10 @@ struct WorldClockApp: App {
         }
         .modelContainer(Self.container)
 
-        // A fixed label on purpose: a live one (TimelineView + @Query) put the status item
-        // in a layout loop at 100% CPU, with every title/image change resizing the item,
-        // which re-ran the label. The city times live in the popover instead.
-        MenuBarExtra("World Clock", systemImage: "globe", isInserted: $showMenuBarExtra) {
+        MenuBarExtra(isInserted: $showMenuBarExtra) {
             MenuBarView().modelContainer(Self.container)
+        } label: {
+            MenuBarLabel(clock: menuBarClock)
         }
         .menuBarExtraStyle(.window)
         #else
