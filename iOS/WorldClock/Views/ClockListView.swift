@@ -21,15 +21,8 @@ struct ClockListView: View {
     @AppStorage("homeTimeZoneIdentifier") private var homeTimeZoneIdentifier = ""
     @AppStorage("homeTimeZoneLabel") private var homeTimeZoneLabel = ""
 
-    private var homeTimeZone: TimeZone {
-        homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
-    }
-
-    // The alias the user picked the home city under, falling back to the zone
-    // ID's own name when unset — see the identical fallback in SettingsView.
-    private var homeLabel: String {
-        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: homeTimeZone.identifier) : homeTimeZoneLabel
-    }
+    private var homeTimeZone: TimeZone { ClockFormatting.homeZone(homeTimeZoneIdentifier) }
+    private var homeLabel: String { ClockFormatting.homeLabel(identifier: homeTimeZoneIdentifier, label: homeTimeZoneLabel) }
 
     /// As many ~330pt columns as fit — 1 on an iPhone, more on an iPad or a wide Mac
     /// window — regardless of selection. A uniform grid (`LazyVGrid`) sizes every card
@@ -37,7 +30,7 @@ struct ClockListView: View {
     /// inline wheel) would either distort every column's row or force a collapse to a
     /// single column; masonry's independent per-column stacks avoid both: expanding a
     /// card only pushes down the cards below it in *that* column.
-    private func columnCount(for width: CGFloat) -> Int {
+    static func columnCount(for width: CGFloat) -> Int {
         max(1, Int((width + 10) / 330))
     }
 
@@ -45,7 +38,7 @@ struct ClockListView: View {
     /// entry 1 → column 1, ...). Not packed by actual height — that needs measuring
     /// each card first — but with rows this uniform in height when collapsed, a plain
     /// round-robin already keeps columns close to even.
-    private func columns(_ entries: [ClockEntry], count: Int) -> [[ClockEntry]] {
+    static func columns(_ entries: [ClockEntry], count: Int) -> [[ClockEntry]] {
         guard count > 1 else { return [entries] }
         var result = Array(repeating: [ClockEntry](), count: count)
         for (index, entry) in entries.enumerated() {
@@ -62,7 +55,7 @@ struct ClockListView: View {
             // everything else (rows, wheel) still scrubs normally.
             let skyHour = animateSky
                 ? viewModel.activeAnchorHour(entries: entries, now: now, homeTimeZone: homeTimeZone)
-                : ClockBoardViewModel.hourOfDay(in: homeTimeZone, at: now)
+                : ClockFormatting.hourOfDay(in: homeTimeZone, at: now)
 
             ZStack(alignment: .bottom) {
                 BackgroundView(hour: skyHour)
@@ -107,9 +100,9 @@ struct ClockListView: View {
                     // column — the rest of the board doesn't move.
                     GeometryReader { geometry in
                         ScrollView {
-                            let columnCount = columnCount(for: geometry.size.width)
+                            let columnCount = Self.columnCount(for: geometry.size.width)
                             HStack(alignment: .top, spacing: 10) {
-                                ForEach(Array(columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
+                                ForEach(Array(Self.columns(entries, count: columnCount).enumerated()), id: \.offset) { _, columnEntries in
                                     // maxWidth: .infinity so the HStack splits its width evenly
                                     // across columns and each one grows/shrinks on rotation —
                                     // without it, a VStack shrinks to fit its widest row instead.
@@ -126,7 +119,7 @@ struct ClockListView: View {
                                                 entry: entry, now: now, use24Hour: use24Hour,
                                                 showCountryName: showCountryName, flagNextDayCities: flagNextDayCities,
                                                 homeTimeZone: homeTimeZone,
-                                                onDelete: { deleteEntry(entry) },
+                                                onDelete: { viewModel.delete(entry, from: modelContext) },
                                                 viewModel: viewModel
                                             )
                                                 // A swipe-to-delete action would install a horizontal drag
@@ -136,7 +129,7 @@ struct ClockListView: View {
                                                 // expanded state where the wheel is already using that drag.
                                                 .contextMenu {
                                                     Button(role: .destructive) {
-                                                        deleteEntry(entry)
+                                                        viewModel.delete(entry, from: modelContext)
                                                     } label: {
                                                         Label("Delete", systemImage: "trash")
                                                     }
@@ -183,6 +176,10 @@ struct ClockListView: View {
                 }
             }
         }
+        // Keep the widget's city picker in sync with this list (adds, deletes, renames, reorders).
+        .task(id: SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel)) {
+            SharedCities.save(SharedCities.Snapshot(entries, homeIdentifier: homeTimeZoneIdentifier, homeLabel: homeTimeZoneLabel))
+        }
         .sheet(isPresented: $showingAddSheet) {
             AddTimeZoneView(
                 kicker: "\(entries.count) CITIES ON YOUR CLOCK",
@@ -191,7 +188,7 @@ struct ClockListView: View {
                 homeTimeZone: homeTimeZone,
                 use24Hour: use24Hour
             ) { identifier, label in
-                addEntry(identifier: identifier, label: label)
+                viewModel.add(identifier: identifier, label: label, after: entries, in: modelContext)
             }
         }
         .sheet(isPresented: $showingSettings) {
@@ -215,8 +212,8 @@ struct ClockListView: View {
             }
             Spacer()
             HStack(spacing: 10) {
-                headerButton(systemImage: "gearshape") { showingSettings = true }
-                headerButton(systemImage: "plus") { showingAddSheet = true }
+                CircleIconButton(systemImage: "gearshape") { showingSettings = true }
+                CircleIconButton(systemImage: "plus") { showingAddSheet = true }
             }
         }
         .padding(.horizontal, Theme.Spacing.base)
@@ -224,33 +221,6 @@ struct ClockListView: View {
         .padding(.bottom, 20)
     }
 
-    private func headerButton(systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.accentText)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Theme.glass.opacity(0.5)))
-                .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func addEntry(identifier: String, label: String) {
-        let sortOrder = (entries.map(\.sortOrder).max() ?? -1) + 1
-        modelContext.insert(ClockEntry(timeZoneIdentifier: identifier, label: label, sortOrder: sortOrder))
-    }
-
-    /// Deleting the *selected* entry left `selectedEntryID` pointing at nothing —
-    /// `gridColumns` and the bottom-wheel visibility both key off "is something
-    /// selected", not "does the selected entry still exist", so the board was stuck
-    /// showing a single column with no way back to the grid and no bottom wheel.
-    private func deleteEntry(_ entry: ClockEntry) {
-        if viewModel.selectedEntryID == entry.id {
-            viewModel.deselect()
-        }
-        modelContext.delete(entry)
-    }
 }
 
 private struct ClockRow: View {
@@ -377,10 +347,7 @@ private struct ClockRow: View {
 
     /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
     private var timeComponents: (main: String, period: String) {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = entry.timeZone
-        let comps = calendar.dateComponents([.hour, .minute], from: displayedDate)
-        return ClockFormatting.timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
+        ClockFormatting.timeComponents(at: displayedDate, in: entry.timeZone, use24Hour: use24Hour)
     }
 
     private var deltaLabel: String {
@@ -390,15 +357,8 @@ private struct ClockRow: View {
         )
     }
 
-    /// True when the entry's local calendar date (at the displayed moment) is a day
-    /// ahead of home's — e.g. it's still today at home but already tomorrow there.
     private var isNextDay: Bool {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = homeTimeZone
-        let homeDay = calendar.startOfDay(for: displayedDate)
-        calendar.timeZone = entry.timeZone
-        let entryDay = calendar.startOfDay(for: displayedDate)
-        return entryDay > homeDay
+        ClockFormatting.dayOffset(of: entry.timeZone, from: homeTimeZone, at: displayedDate) > 0
     }
 
     private var subtitle: String {

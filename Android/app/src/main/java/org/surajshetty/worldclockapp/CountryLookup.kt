@@ -83,16 +83,9 @@ object CountryLookup {
         "Pacific/Palau" to "PW",
     )
 
-    private val cache = HashMap<String, Country?>()
-
     fun lookup(timeZoneId: String): Country? {
-        cache[timeZoneId]?.let { return it }
-        if (cache.containsKey(timeZoneId)) return null // cached "no country" miss
-        val code = countryCodesByTimeZone[timeZoneId] ?: run { cache[timeZoneId] = null; return null }
-        val name = Locale("", code).displayCountry
-        val result = Country(name, flagEmoji(code))
-        cache[timeZoneId] = result
-        return result
+        val code = countryCodesByTimeZone[timeZoneId] ?: return null
+        return Country(Locale("", code).displayCountry, flagEmoji(code))
     }
 
     private fun flagEmoji(countryCode: String): String {

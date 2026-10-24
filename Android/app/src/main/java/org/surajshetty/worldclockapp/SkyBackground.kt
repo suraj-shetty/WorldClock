@@ -1,5 +1,6 @@
 package org.surajshetty.worldclockapp
 
+import android.graphics.Bitmap
 import android.graphics.BlurMaskFilter
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -20,14 +21,19 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asAndroidPath
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -79,14 +85,17 @@ fun SkyBackground(hour: Double, modifier: Modifier = Modifier) {
 @Composable
 private fun SkyGradientLayer(hour: Double, modifier: Modifier) {
     Canvas(modifier = modifier.fillMaxSize()) {
-        val p = skyPalette(normalizedHour(hour))
-        drawRect(
-            brush = Brush.linearGradient(
-                0f to p.top, 0.30f to p.up, 0.62f to p.mid, 1.0f to p.hz,
-                start = Offset(0f, 0f), end = Offset(0f, size.height)
-            )
-        )
+        drawGradient(skyPalette(normalizedHour(hour)))
     }
+}
+
+private fun DrawScope.drawGradient(p: SkyPalette) {
+    drawRect(
+        brush = Brush.linearGradient(
+            0f to p.top, 0.30f to p.up, 0.62f to p.mid, 1.0f to p.hz,
+            start = Offset(0f, 0f), end = Offset(0f, size.height)
+        )
+    )
 }
 
 @Composable
@@ -104,18 +113,37 @@ private fun SkyStarLayer(hour: Double, modifier: Modifier) {
         // Read `tick` so this Canvas recomposes every 100ms without needing the
         // twinkle phase to live anywhere else.
         @Suppress("UNUSED_EXPRESSION") tick
-        val p = skyPalette(normalizedHour(hour))
-        if (p.star <= 0.01) return@Canvas
-        val scaleFactor = min(size.width, size.height) / 390f
-        val elapsed = System.nanoTime() / 1_000_000_000.0
-        for (star in skyStars) {
-            val twinkle = (sin(elapsed * (2 * Math.PI / star.dur) + star.delay) + 1) / 2
-            val alpha = (star.baseBrightness * p.star * (0.35 + 0.65 * twinkle)).toFloat().coerceIn(0f, 1f)
-            val point = Offset((star.x / 100 * size.width).toFloat(), (star.y / 100 * size.height).toFloat())
-            val d = (star.d * scaleFactor).toFloat()
-            drawCircle(color = Color(0xFFF3F5FE), radius = d / 2, center = point, alpha = alpha)
-        }
+        drawStars(skyPalette(normalizedHour(hour)), System.nanoTime() / 1_000_000_000.0)
     }
+}
+
+private fun DrawScope.drawStars(p: SkyPalette, elapsed: Double) {
+    if (p.star <= 0.01) return
+    val scaleFactor = min(size.width, size.height) / 390f
+    for (star in skyStars) {
+        val twinkle = (sin(elapsed * (2 * Math.PI / star.dur) + star.delay) + 1) / 2
+        val alpha = (star.baseBrightness * p.star * (0.35 + 0.65 * twinkle)).toFloat().coerceIn(0f, 1f)
+        val point = Offset((star.x / 100 * size.width).toFloat(), (star.y / 100 * size.height).toFloat())
+        val d = (star.d * scaleFactor).toFloat()
+        drawCircle(color = Color(0xFFF3F5FE), radius = d / 2, center = point, alpha = alpha)
+    }
+}
+
+/**
+ * The whole sky as one still frame, for the home-screen widget (SkyWidget.kt), which
+ * can't host Compose and has to be handed a bitmap. Same draw code as the live layers
+ * above, through a software canvas — BlurMaskFilter works there on every API level.
+ */
+fun renderSkyBitmap(hour: Double, widthPx: Int, heightPx: Int): Bitmap {
+    val bitmap = ImageBitmap(widthPx, heightPx)
+    CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(bitmap), Size(widthPx.toFloat(), heightPx.toFloat())) {
+        val h = normalizedHour(hour)
+        val p = skyPalette(h)
+        drawGradient(p)
+        drawStars(p, elapsed = 0.0)
+        drawForeground(h)
+    }
+    return bitmap.asAndroidBitmap()
 }
 
 @Composable

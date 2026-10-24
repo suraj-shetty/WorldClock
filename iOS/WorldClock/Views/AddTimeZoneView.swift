@@ -73,11 +73,8 @@ struct AddTimeZoneView: View {
 
     private func row(for option: TimeZoneOption, now: Date) -> some View {
         let isAdded = isMultiSelect && (existingLabels.contains(option.label) || addedLabels.contains(option.label))
-        // Resolved once, through the same cache ClockEntry.timeZone uses — this view
-        // previously constructed a fresh, uncached TimeZone twice per row (once here,
-        // once in subtitle(for:)) on every render of a ~450-row list.
-        let zone = TimeZoneResolver.resolve(option.identifier)
-        let time = timeComponents(in: zone, now: now)
+        let zone = TimeZone(identifier: option.identifier) ?? .current
+        let time = ClockFormatting.timeComponents(at: now, in: zone, use24Hour: use24Hour)
 
         let content = HStack(spacing: 12) {
             if let country = option.country {
@@ -138,17 +135,7 @@ struct AddTimeZoneView: View {
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Theme.accentText)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Theme.glass.opacity(0.5)))
-                    .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
+            CircleIconButton(systemImage: "chevron.left") { dismiss() }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(kicker)
@@ -194,14 +181,6 @@ struct AddTimeZoneView: View {
         .background(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).fill(Theme.glass.opacity(0.5)))
         .overlay(RoundedRectangle(cornerRadius: Theme.Radius.row, style: .continuous).stroke(Theme.accent.opacity(0.5), lineWidth: 1))
         .padding(.horizontal, Theme.Spacing.base)
-    }
-
-    /// Split so the "AM"/"PM" suffix can render smaller than the digits (empty in 24h mode).
-    private func timeComponents(in zone: TimeZone, now: Date) -> (main: String, period: String) {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = zone
-        let comps = calendar.dateComponents([.hour, .minute], from: now)
-        return ClockFormatting.timeComponents(hour: comps.hour ?? 0, minute: comps.minute ?? 0, use24Hour: use24Hour)
     }
 
     private func subtitle(for option: TimeZoneOption, in zone: TimeZone, now: Date) -> String {

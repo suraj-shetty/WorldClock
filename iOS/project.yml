@@ -26,6 +26,8 @@ targets:
     platform: [iOS, macOS]
     sources:
       - path: WorldClock
+    dependencies:
+      - target: WorldClockWidget_${platform}
     configFiles:
       Debug: Config/Signing.xcconfig
       Release: Config/Signing.xcconfig
@@ -37,6 +39,8 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         CFBundleIconName: AppIcon
         UILaunchScreen: {}
+        # Read by SharedCities on macOS, where app groups are team-prefixed.
+        AppGroup: $(TeamIdentifierPrefix)org.surajshetty.worldclockapp
     settings:
       base:
         PRODUCT_NAME: WorldClock
@@ -46,6 +50,49 @@ targets:
         MARKETING_VERSION: "1.0"
         CURRENT_PROJECT_VERSION: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # App Group shared with the widget (SharedCities). The macOS app joins its
+        # team-prefixed group without being sandboxed; only the widget is.
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": WorldClock/WorldClock.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": WorldClock/WorldClock-macOS.entitlements
+
+  # Home-screen (iOS) / desktop (macOS) widget. Built for both platforms only
+  # because the app target is — XcodeGen can't make the app's dependency on it
+  # iOS-only — and macOS requires extensions to be sandboxed. Reuses the app's
+  # sky drawing and saved-city list directly rather than a shared framework: it's four files.
+  WorldClockWidget:
+    type: app-extension
+    platform: [iOS, macOS]
+    sources:
+      - path: WorldClockWidget
+      - path: WorldClock/Views/BackgroundView.swift
+      - path: WorldClock/Views/SkyMotion.swift
+      - path: WorldClock/Sky
+      - path: WorldClock/DesignSystem/Theme.swift
+      - path: WorldClock/Models/ClockEntry.swift
+      - path: WorldClock/Models/SharedCities.swift
+    configFiles:
+      Debug: Config/Signing.xcconfig
+      Release: Config/Signing.xcconfig
+    info:
+      path: WorldClockWidget/Info.plist
+      properties:
+        CFBundleDisplayName: WorldClock
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        AppGroup: $(TeamIdentifierPrefix)org.surajshetty.worldclockapp
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_NAME: WorldClockWidget
+        PRODUCT_BUNDLE_IDENTIFIER: org.surajshetty.worldclockapp.widget
+        CODE_SIGN_STYLE: Automatic
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": WorldClockWidget/WorldClockWidget.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphone*]": WorldClockWidget/WorldClockWidget-iOS.entitlements
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SKIP_INSTALL: YES
 
   WorldClockTests:
     type: bundle.unit-test

@@ -13,15 +13,8 @@ struct SettingsView: View {
 
     @State private var showingHomePicker = false
 
-    private var homeTimeZone: TimeZone {
-        homeTimeZoneIdentifier.isEmpty ? .current : (TimeZone(identifier: homeTimeZoneIdentifier) ?? .current)
-    }
-
-    // The alias the user picked the home city under (e.g. a city name sharing a
-    // country's zone), falling back to the zone ID's own name when unset.
-    private var homeLabel: String {
-        homeTimeZoneLabel.isEmpty ? ClockFormatting.displayLabel(for: homeTimeZone.identifier) : homeTimeZoneLabel
-    }
+    private var homeTimeZone: TimeZone { ClockFormatting.homeZone(homeTimeZoneIdentifier) }
+    private var homeLabel: String { ClockFormatting.homeLabel(identifier: homeTimeZoneIdentifier, label: homeTimeZoneLabel) }
 
     var body: some View {
         ZStack {
@@ -110,17 +103,7 @@ struct SettingsView: View {
 
     private var header: some View {
         HStack {
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(Theme.accentText)
-                    .frame(width: 40, height: 40)
-                    .background(Circle().fill(Theme.glass.opacity(0.5)))
-                    .overlay(Circle().stroke(Theme.accent, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
+            CircleIconButton(systemImage: "chevron.left") { dismiss() }
 
             Text("Settings")
                 .font(.system(size: 29, weight: .medium))

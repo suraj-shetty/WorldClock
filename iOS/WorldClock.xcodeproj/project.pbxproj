@@ -7,27 +7,59 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0815BEA12598DF930E9970CD /* WorldClockWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		0850D7B4FE51D9371C2F861F /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0997B879CF5358644500B2 /* WorldClockWidget.swift */; };
 		0BB2956E12E18D61646508AB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		15494C3CAE9E444C364246F7 /* MacBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */; };
+		1EB776AD9A261D125DF8AD2A /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33FEB2DE50B3569752CBC40C /* Sky.metal */; };
+		287A3264CCDAE2F9C89C9BAC /* SkyLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0CBF02A79203290DE2C56A /* SkyLight.swift */; };
+		3082F040059F203759BAEBCB /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33FEB2DE50B3569752CBC40C /* Sky.metal */; };
 		388F30C46895412C3B31A9B0 /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
 		3F2FFD64C5ABB9B7CB930CF5 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
 		4A3122E6B8B906903E53000E /* TimeWheelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */; };
+		4C8AB89D6DE2E5DDE15721BA /* MacPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A44E564E8885E2360BFBAB3 /* MacPanels.swift */; };
+		5BCF49F727B312C4F4181E84 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
 		5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
 		637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
+		68E8EDF8B3CF3D15550A975F /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
 		6ABA88C045AAF6F0EB2B4C96 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
 		6C0641485028C8FAA1B6BFF7 /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */; };
+		7BD2FDFB4D3108808624952D /* SkyLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0CBF02A79203290DE2C56A /* SkyLight.swift */; };
+		8456D6509CF21228C63C0919 /* SkyMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */; };
 		84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
+		876EF91F205C6052793588C4 /* SkyLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0CBF02A79203290DE2C56A /* SkyLight.swift */; };
 		87A6E0EA32A4DD1017A5EFDF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
+		8AA55867632BDE657647B8F3 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33FEB2DE50B3569752CBC40C /* Sky.metal */; };
 		8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		9303A6B1812924DCFED5F83D /* LitGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD804B111EBA246030F034A0 /* LitGlass.swift */; };
+		9498879C4F447F6E5ADC3C53 /* SkyMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */; };
 		9563F9CD74727D9938275F6F /* BackgroundMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */; };
 		9AAB187593602F8618787083 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
+		9CBAF84C519937ECEDBCA1C6 /* WorldClockWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C0997B879CF5358644500B2 /* WorldClockWidget.swift */; };
+		A1DB015628E118F5C8422193 /* SkyMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */; };
+		A26D1FC756DBB202FA271B75 /* LitGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD804B111EBA246030F034A0 /* LitGlass.swift */; };
+		A5DDD300E177357A127BE8DB /* SkyMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */; };
+		A9BAD53E29515BC02AE237D3 /* BackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108E7658E568871CDE8B276E /* BackgroundView.swift */; };
+		AC3FC2B5D2E543143C467584 /* MacBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */; };
+		B2E35D3E8747A7C1DED56009 /* WorldClockWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */; };
+		BA9402595169F64E00BB1BE8 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
+		C7AD428D642B8FCBC20569D0 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
+		CEE30409D20D3CB5EECFFDAD /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
+		D428ABC21290F70415BFFB99 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
+		DD650C42D19B508F049982D7 /* MacPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A44E564E8885E2360BFBAB3 /* MacPanels.swift */; };
 		E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
 		EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */; };
 		EA9339B39BDFD8D11C8ED1EC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F2C4A35CACC525D4840BAA11 /* Assets.xcassets */; };
 		EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E1B05A67836F498146833A1 /* ClockListView.swift */; };
+		EF8964DBE835236D89B5E773 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D2A1BF89CE5E1AD79330EF /* Theme.swift */; };
 		F0086A0933C87B8B39DCDEC1 /* AddTimeZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */; };
 		F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
 		F74A2BF4833F0C9E41071B02 /* AddTimeZoneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */; };
+		F7F10009679E8A6B3A8508B1 /* SkyLight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0CBF02A79203290DE2C56A /* SkyLight.swift */; };
+		FA795C1FC40282DF49D81507 /* ClockEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */; };
+		FB8829C0888D06F490B86B07 /* Sky.metal in Sources */ = {isa = PBXBuildFile; fileRef = 33FEB2DE50B3569752CBC40C /* Sky.metal */; };
+		FBA31907CAB6CD5A542ADBD8 /* SharedCities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F511CCF49DC0E27B48D731 /* SharedCities.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -38,35 +70,101 @@
 			remoteGlobalIDString = D7F0C1B1F4F449E51F694777;
 			remoteInfo = WorldClock_iOS;
 		};
+		10DC2483EA7A7EB5A5B6A10B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4FEE5BB48363CCAB29BB19F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C2336DFBFBE3ABBF4928D1C6;
+			remoteInfo = WorldClockWidget_iOS;
+		};
+		CFB61AFF272367C148358270 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4FEE5BB48363CCAB29BB19F5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C2AD75D02FBBB24FADF572B4;
+			remoteInfo = WorldClockWidget_macOS;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		83EC90523723AD795DA71729 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0815BEA12598DF930E9970CD /* WorldClockWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B5C073B1C0D84C730842F8CE /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B2E35D3E8747A7C1DED56009 /* WorldClockWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		033A4801901D3D687C43135D /* WorldClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		108E7658E568871CDE8B276E /* BackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundView.swift; sourceTree = "<group>"; };
 		1E1B05A67836F498146833A1 /* ClockListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockListView.swift; sourceTree = "<group>"; };
 		20D2A1BF89CE5E1AD79330EF /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = WorldClockWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2A0CBF02A79203290DE2C56A /* SkyLight.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyLight.swift; sourceTree = "<group>"; };
+		33FEB2DE50B3569752CBC40C /* Sky.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Sky.metal; sourceTree = "<group>"; };
 		35B75A350FB617755F32E8D8 /* ClockBoardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockBoardViewModel.swift; sourceTree = "<group>"; };
+		3A44E564E8885E2360BFBAB3 /* MacPanels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacPanels.swift; sourceTree = "<group>"; };
 		48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockEntry.swift; sourceTree = "<group>"; };
+		4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkyMotion.swift; sourceTree = "<group>"; };
 		53E2392F6806DC338D023E4C /* WorldClock.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		65F511CCF49DC0E27B48D731 /* SharedCities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCities.swift; sourceTree = "<group>"; };
 		865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		8C0997B879CF5358644500B2 /* WorldClockWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockWidget.swift; sourceTree = "<group>"; };
 		8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockApp.swift; sourceTree = "<group>"; };
+		999269CD04E53B466B2AD98F /* WorldClockWidget-iOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "WorldClockWidget-iOS.entitlements"; sourceTree = "<group>"; };
+		A017CD1CCEE236DAD6E3E00A /* WorldClockWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorldClockWidget.entitlements; sourceTree = "<group>"; };
 		A0B1CA931467DCEA3E99D2C3 /* BackgroundMathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundMathTests.swift; sourceTree = "<group>"; };
+		AD92C6BC1DD69D0CC13DEDE3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C1B0222D9B6826227F1433D7 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		C1C8F173680A1CE47D565E9A /* WorldClock-macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "WorldClock-macOS.entitlements"; sourceTree = "<group>"; };
 		D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTimeZoneView.swift; sourceTree = "<group>"; };
+		D6883C86DBAFE9B20F3307E3 /* WorldClock.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WorldClock.entitlements; sourceTree = "<group>"; };
 		D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeWheelView.swift; sourceTree = "<group>"; };
+		DD804B111EBA246030F034A0 /* LitGlass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LitGlass.swift; sourceTree = "<group>"; };
 		DF716C33CB766DE62DA10940 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = WorldClockWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2C4A35CACC525D4840BAA11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacBoardView.swift; sourceTree = "<group>"; };
 		FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WorldClockTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		0B4E2DB0EE63801D416AABD4 /* Sky */ = {
+			isa = PBXGroup;
+			children = (
+				33FEB2DE50B3569752CBC40C /* Sky.metal */,
+				2A0CBF02A79203290DE2C56A /* SkyLight.swift */,
+			);
+			path = Sky;
+			sourceTree = "<group>";
+		};
 		0CDBF74ADEB1DAE5CF798863 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				D2C52DEA0B7E8ADF76C54BE4 /* AddTimeZoneView.swift */,
 				108E7658E568871CDE8B276E /* BackgroundView.swift */,
 				1E1B05A67836F498146833A1 /* ClockListView.swift */,
+				FB88293E2DA8A86653ECE7A7 /* MacBoardView.swift */,
+				3A44E564E8885E2360BFBAB3 /* MacPanels.swift */,
 				865F76A76E4FA0D6BF4CD10C /* SettingsView.swift */,
+				4BBC3BAA798D8D3D0E6CC753 /* SkyMotion.swift */,
 				D6AA45476DF5E0C26DDEF7A9 /* TimeWheelView.swift */,
 			);
 			path = Views;
@@ -83,9 +181,21 @@
 		1395B4340AAD52B14CB9B98D /* DesignSystem */ = {
 			isa = PBXGroup;
 			children = (
+				DD804B111EBA246030F034A0 /* LitGlass.swift */,
 				20D2A1BF89CE5E1AD79330EF /* Theme.swift */,
 			);
 			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		2703D65CD2CB36C3C7293B6E /* WorldClockWidget */ = {
+			isa = PBXGroup;
+			children = (
+				AD92C6BC1DD69D0CC13DEDE3 /* Info.plist */,
+				999269CD04E53B466B2AD98F /* WorldClockWidget-iOS.entitlements */,
+				A017CD1CCEE236DAD6E3E00A /* WorldClockWidget.entitlements */,
+				8C0997B879CF5358644500B2 /* WorldClockWidget.swift */,
+			);
+			path = WorldClockWidget;
 			sourceTree = "<group>";
 		};
 		2B5F3637322CC2063FAA44CD /* WorldClock */ = {
@@ -93,9 +203,12 @@
 			children = (
 				F2C4A35CACC525D4840BAA11 /* Assets.xcassets */,
 				DF716C33CB766DE62DA10940 /* Info.plist */,
+				C1C8F173680A1CE47D565E9A /* WorldClock-macOS.entitlements */,
+				D6883C86DBAFE9B20F3307E3 /* WorldClock.entitlements */,
 				8C0E3E0B56CF08C954C1D547 /* WorldClockApp.swift */,
 				1395B4340AAD52B14CB9B98D /* DesignSystem */,
 				8261EFDC3FEA8BD378EECC04 /* Models */,
+				0B4E2DB0EE63801D416AABD4 /* Sky */,
 				D28CE9588389D1627FA9B974 /* ViewModels */,
 				0CDBF74ADEB1DAE5CF798863 /* Views */,
 			);
@@ -108,6 +221,8 @@
 				53E2392F6806DC338D023E4C /* WorldClock.app */,
 				033A4801901D3D687C43135D /* WorldClock.app */,
 				FC915D3AF71AFE2851876CAF /* WorldClockTests.xctest */,
+				DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */,
+				21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -116,6 +231,7 @@
 			isa = PBXGroup;
 			children = (
 				48A5C2AFEA7E0D3800094299 /* ClockEntry.swift */,
+				65F511CCF49DC0E27B48D731 /* SharedCities.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -142,6 +258,7 @@
 				A35088758CD294A4093C6BFB /* Config */,
 				2B5F3637322CC2063FAA44CD /* WorldClock */,
 				0D429892A76C495639F93075 /* WorldClockTests */,
+				2703D65CD2CB36C3C7293B6E /* WorldClockWidget */,
 				673EB4F59C0940A76A836601 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -173,10 +290,12 @@
 			buildPhases = (
 				B1DC9CB5111A67AC0ECFAF8A /* Sources */,
 				14492258757FEB1AB7221DCD /* Resources */,
+				B5C073B1C0D84C730842F8CE /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				801A43C30CBF03C66EFF1F05 /* PBXTargetDependency */,
 			);
 			name = WorldClock_macOS;
 			packageProductDependencies = (
@@ -185,16 +304,52 @@
 			productReference = 033A4801901D3D687C43135D /* WorldClock.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C2336DFBFBE3ABBF4928D1C6 /* WorldClockWidget_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 70FC3024D10EBAC8672B60FB /* Build configuration list for PBXNativeTarget "WorldClockWidget_iOS" */;
+			buildPhases = (
+				25DEC1F9840AE5060F7EC01F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorldClockWidget_iOS;
+			packageProductDependencies = (
+			);
+			productName = WorldClockWidget_iOS;
+			productReference = DFE0C8FCD0AF8793EF6862AE /* WorldClockWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		C2AD75D02FBBB24FADF572B4 /* WorldClockWidget_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2F291E4B87D560A38EF47B40 /* Build configuration list for PBXNativeTarget "WorldClockWidget_macOS" */;
+			buildPhases = (
+				8E2A88BDFFE65B05B02AC51E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = WorldClockWidget_macOS;
+			packageProductDependencies = (
+			);
+			productName = WorldClockWidget_macOS;
+			productReference = 21FB17C6ACD665A4806F85E4 /* WorldClockWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 01B2147CA19A5A73B6786BAC /* Build configuration list for PBXNativeTarget "WorldClock_iOS" */;
 			buildPhases = (
 				89684E3BB978C9E4269551DF /* Sources */,
 				55087C0CFB8A291B653D34A9 /* Resources */,
+				83EC90523723AD795DA71729 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				FDFB05DF3406D01CC905D7E2 /* PBXTargetDependency */,
 			);
 			name = WorldClock_iOS;
 			packageProductDependencies = (
@@ -213,6 +368,14 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					54C22D0578A33FCB1FD5C3E3 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					C2336DFBFBE3ABBF4928D1C6 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					C2AD75D02FBBB24FADF572B4 = {
 						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
@@ -238,6 +401,8 @@
 			targets = (
 				D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */,
 				54C22D0578A33FCB1FD5C3E3 /* WorldClock_macOS */,
+				C2336DFBFBE3ABBF4928D1C6 /* WorldClockWidget_iOS */,
+				C2AD75D02FBBB24FADF572B4 /* WorldClockWidget_macOS */,
 				3C164729C4BF5857D77375E7 /* WorldClockTests */,
 			);
 		};
@@ -263,6 +428,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		25DEC1F9840AE5060F7EC01F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9BAD53E29515BC02AE237D3 /* BackgroundView.swift in Sources */,
+				FA795C1FC40282DF49D81507 /* ClockEntry.swift in Sources */,
+				BA9402595169F64E00BB1BE8 /* SharedCities.swift in Sources */,
+				8AA55867632BDE657647B8F3 /* Sky.metal in Sources */,
+				F7F10009679E8A6B3A8508B1 /* SkyLight.swift in Sources */,
+				A1DB015628E118F5C8422193 /* SkyMotion.swift in Sources */,
+				C7AD428D642B8FCBC20569D0 /* Theme.swift in Sources */,
+				9CBAF84C519937ECEDBCA1C6 /* WorldClockWidget.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7F5DFD8871FD02DA763DD9B6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -280,10 +460,32 @@
 				84E172531FAB5D0FF208B0E7 /* ClockBoardViewModel.swift in Sources */,
 				F6B9881B382733497DC4F97E /* ClockEntry.swift in Sources */,
 				EE6754CA9A1F3B81D31589E9 /* ClockListView.swift in Sources */,
+				A26D1FC756DBB202FA271B75 /* LitGlass.swift in Sources */,
+				AC3FC2B5D2E543143C467584 /* MacBoardView.swift in Sources */,
+				DD650C42D19B508F049982D7 /* MacPanels.swift in Sources */,
 				B74A5EB6F963C257CC07453F /* SettingsView.swift in Sources */,
+				FBA31907CAB6CD5A542ADBD8 /* SharedCities.swift in Sources */,
+				FB8829C0888D06F490B86B07 /* Sky.metal in Sources */,
+				876EF91F205C6052793588C4 /* SkyLight.swift in Sources */,
+				9498879C4F447F6E5ADC3C53 /* SkyMotion.swift in Sources */,
 				8E4C9EB48CF9BA869D2A93E2 /* Theme.swift in Sources */,
 				388F30C46895412C3B31A9B0 /* TimeWheelView.swift in Sources */,
 				6C0641485028C8FAA1B6BFF7 /* WorldClockApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8E2A88BDFFE65B05B02AC51E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				68E8EDF8B3CF3D15550A975F /* BackgroundView.swift in Sources */,
+				CEE30409D20D3CB5EECFFDAD /* ClockEntry.swift in Sources */,
+				5BCF49F727B312C4F4181E84 /* SharedCities.swift in Sources */,
+				3082F040059F203759BAEBCB /* Sky.metal in Sources */,
+				7BD2FDFB4D3108808624952D /* SkyLight.swift in Sources */,
+				8456D6509CF21228C63C0919 /* SkyMotion.swift in Sources */,
+				EF8964DBE835236D89B5E773 /* Theme.swift in Sources */,
+				0850D7B4FE51D9371C2F861F /* WorldClockWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,7 +498,14 @@
 				EA4EF5A401667D0E516C0E72 /* ClockBoardViewModel.swift in Sources */,
 				E9DFD171480F526EE813D1D1 /* ClockEntry.swift in Sources */,
 				637578D3EF2FA16233AEC618 /* ClockListView.swift in Sources */,
+				9303A6B1812924DCFED5F83D /* LitGlass.swift in Sources */,
+				15494C3CAE9E444C364246F7 /* MacBoardView.swift in Sources */,
+				4C8AB89D6DE2E5DDE15721BA /* MacPanels.swift in Sources */,
 				5D8A194AC3492C551EAA6FCD /* SettingsView.swift in Sources */,
+				D428ABC21290F70415BFFB99 /* SharedCities.swift in Sources */,
+				1EB776AD9A261D125DF8AD2A /* Sky.metal in Sources */,
+				287A3264CCDAE2F9C89C9BAC /* SkyLight.swift in Sources */,
+				A5DDD300E177357A127BE8DB /* SkyMotion.swift in Sources */,
 				0BB2956E12E18D61646508AB /* Theme.swift in Sources */,
 				4A3122E6B8B906903E53000E /* TimeWheelView.swift in Sources */,
 				6ABA88C045AAF6F0EB2B4C96 /* WorldClockApp.swift in Sources */,
@@ -310,6 +519,16 @@
 			isa = PBXTargetDependency;
 			target = D7F0C1B1F4F449E51F694777 /* WorldClock_iOS */;
 			targetProxy = 055C6662C3E6C267A8C74A0E /* PBXContainerItemProxy */;
+		};
+		801A43C30CBF03C66EFF1F05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C2AD75D02FBBB24FADF572B4 /* WorldClockWidget_macOS */;
+			targetProxy = CFB61AFF272367C148358270 /* PBXContainerItemProxy */;
+		};
+		FDFB05DF3406D01CC905D7E2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C2336DFBFBE3ABBF4928D1C6 /* WorldClockWidget_iOS */;
+			targetProxy = 10DC2483EA7A7EB5A5B6A10B /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -333,11 +552,37 @@
 			};
 			name = Debug;
 		};
+		25BC1E1278D42B866BF3ED95 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "WorldClockWidget/WorldClockWidget-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = WorldClockWidget/WorldClockWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClockWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.widget;
+				PRODUCT_NAME = WorldClockWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
 		2B211E7776367C1870A76E05 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = WorldClock/WorldClock.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "WorldClock/WorldClock-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -359,6 +604,8 @@
 			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = WorldClock/WorldClock.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "WorldClock/WorldClock-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -371,6 +618,76 @@
 				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp;
 				PRODUCT_NAME = WorldClock;
 				SDKROOT = macosx;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		393BE062DF3804F09D0C14CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "WorldClockWidget/WorldClockWidget-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = WorldClockWidget/WorldClockWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClockWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.widget;
+				PRODUCT_NAME = WorldClockWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		4D3BF284F4771C900C5E3321 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "WorldClockWidget/WorldClockWidget-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = WorldClockWidget/WorldClockWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClockWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.widget;
+				PRODUCT_NAME = WorldClockWidget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6770DDBDC07A306125FDA3A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
+			buildSettings = {
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = "WorldClockWidget/WorldClockWidget-iOS.entitlements";
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = WorldClockWidget/WorldClockWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				INFOPLIST_FILE = WorldClockWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = org.surajshetty.worldclockapp.widget;
+				PRODUCT_NAME = WorldClockWidget;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -455,6 +772,8 @@
 			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = WorldClock/WorldClock.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "WorldClock/WorldClock-macOS.entitlements";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -539,6 +858,8 @@
 			baseConfigurationReference = C1B0222D9B6826227F1433D7 /* Signing.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphone*]" = WorldClock/WorldClock.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=macosx*]" = "WorldClock/WorldClock-macOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -563,6 +884,24 @@
 			buildConfigurations = (
 				2B211E7776367C1870A76E05 /* Debug */,
 				A2FCDEDD00A459D2C54008AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		2F291E4B87D560A38EF47B40 /* Build configuration list for PBXNativeTarget "WorldClockWidget_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				25BC1E1278D42B866BF3ED95 /* Debug */,
+				6770DDBDC07A306125FDA3A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		70FC3024D10EBAC8672B60FB /* Build configuration list for PBXNativeTarget "WorldClockWidget_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				393BE062DF3804F09D0C14CD /* Debug */,
+				4D3BF284F4771C900C5E3321 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

@@ -26,6 +26,19 @@ final class ClockBoardViewModel {
         offset = 0
     }
 
+    func add(identifier: String, label: String, after entries: [ClockEntry], in context: ModelContext) {
+        let sortOrder = (entries.map(\.sortOrder).max() ?? -1) + 1
+        context.insert(ClockEntry(timeZoneIdentifier: identifier, label: label, sortOrder: sortOrder))
+    }
+
+    /// Deleting the *selected* entry used to leave `selectedEntryID` pointing at nothing,
+    /// and the board keys "show the bottom wheel / grid" off "is something selected",
+    /// not "does it still exist", so it got stuck. Deselect first.
+    func delete(_ entry: ClockEntry, from context: ModelContext) {
+        if selectedEntryID == entry.id { deselect() }
+        context.delete(entry)
+    }
+
     func displayDate(now: Date) -> Date {
         now.addingTimeInterval(offset)
     }
@@ -42,13 +55,6 @@ final class ClockBoardViewModel {
     /// Fractional hour-of-day (0..<24) in the active anchor's timezone, at `now + offset`.
     /// Feeds BackgroundView, which keys the sky/sun/stars off this single value.
     func activeAnchorHour(entries: [ClockEntry], now: Date, homeTimeZone: TimeZone = .current) -> Double {
-        ClockBoardViewModel.hourOfDay(in: anchorTimeZone(entries: entries, deviceTimeZone: homeTimeZone), at: displayDate(now: now))
-    }
-
-    static func hourOfDay(in timeZone: TimeZone, at date: Date) -> Double {
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = timeZone
-        let comps = calendar.dateComponents([.hour, .minute], from: date)
-        return Double(comps.hour ?? 0) + Double(comps.minute ?? 0) / 60
+        ClockFormatting.hourOfDay(in: anchorTimeZone(entries: entries, deviceTimeZone: homeTimeZone), at: displayDate(now: now))
     }
 }

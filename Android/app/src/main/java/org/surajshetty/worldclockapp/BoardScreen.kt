@@ -1,8 +1,6 @@
 package org.surajshetty.worldclockapp
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,27 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -111,7 +100,7 @@ fun BoardScreen(
                             flagNextDayCities = settings.flagNextDayCities, homeZone = viewModel.homeTimeZone,
                             snapMinutes = settings.snapMinutes,
                             onSelect = { viewModel.select(entry) },
-                            onOffsetChange = { viewModel.updateOffset(it) },
+                            onOffsetChange = { viewModel.offset = it },
                             onDelete = { viewModel.deleteCity(entry.id) }
                         )
                     }
@@ -122,7 +111,7 @@ fun BoardScreen(
                 TimeWheel(
                     anchorNow = now, anchorZone = viewModel.homeTimeZone, use24Hour = settings.use24Hour,
                     style = WheelStyle.Bottom, offset = viewModel.offset, snapMinutes = settings.snapMinutes,
-                    onOffsetChange = { viewModel.updateOffset(it) },
+                    onOffsetChange = { viewModel.offset = it },
                     modifier = Modifier
                         .widthIn(max = 700.dp)
                         .fillMaxWidth()
@@ -158,23 +147,8 @@ private fun Header(homeZoneLabel: String, onSettings: () -> Unit, onAddCity: () 
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            HeaderButton(icon = Icons.Default.Settings, contentDescription = "Settings", onClick = onSettings)
-            HeaderButton(icon = Icons.Default.Add, contentDescription = "Add city", onClick = onAddCity)
+            CircleIconButton(Icons.Default.Settings, contentDescription = "Settings", onClick = onSettings)
+            CircleIconButton(Icons.Default.Add, contentDescription = "Add city", onClick = onAddCity)
         }
-    }
-}
-
-@Composable
-private fun HeaderButton(icon: androidx.compose.ui.graphics.vector.ImageVector, contentDescription: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clip(CircleShape)
-            .background(Theme.glass.copy(alpha = 0.5f))
-            .border(1.dp, Theme.accent, CircleShape)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(icon, contentDescription = contentDescription, tint = Theme.accentText, modifier = Modifier.size(18.dp))
     }
 }

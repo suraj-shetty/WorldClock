@@ -1,5 +1,7 @@
 package org.surajshetty.worldclockapp
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +20,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -27,12 +28,11 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -75,17 +75,7 @@ fun AddCityScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = Theme.Spacing.base).padding(top = 12.dp),
                 verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Theme.glass.copy(alpha = 0.5f))
-                        .border(1.dp, Theme.accent, CircleShape)
-                        .clickable(onClick = onDismiss),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Theme.accentText, modifier = Modifier.size(16.dp))
-                }
+                CircleIconButton(Icons.Default.ArrowBack, contentDescription = "Back", onClick = onDismiss)
                 Column {
                     BasicText(kicker, style = TextStyle(color = Theme.accentText, fontSize = 10.5.sp, fontWeight = FontWeight.Medium, letterSpacing = 1.5.sp))
                     Spacer(Modifier.height(4.dp))
@@ -99,9 +89,7 @@ fun AddCityScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Theme.Spacing.base)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Theme.glass.copy(alpha = 0.5f))
-                    .border(1.dp, Theme.accent.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                    .card(Theme.glass.copy(alpha = 0.5f), Theme.accent.copy(alpha = 0.5f))
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -150,8 +138,7 @@ fun AddCityScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = Theme.Spacing.base, vertical = Theme.Spacing.base)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.dp, Theme.accent, RoundedCornerShape(14.dp))
+                        .card(Color.Transparent, Theme.accent)
                         .clickable(onClick = onDismiss)
                         .padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center
@@ -180,9 +167,7 @@ private fun OptionRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Theme.glass.copy(alpha = 0.48f))
-            .border(1.dp, Theme.text.copy(alpha = 0.13f), RoundedCornerShape(14.dp))
+            .card(Theme.glass.copy(alpha = 0.48f), Theme.text.copy(alpha = 0.13f))
             .clickable(enabled = !isAdded || !isMultiSelect, onClick = onClick)
             .padding(horizontal = 15.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

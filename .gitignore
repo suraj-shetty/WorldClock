@@ -5,7 +5,7 @@ DerivedData/
 xcuserdata/
 
 # Per-developer signing. Config/Signing.xcconfig is committed and includes this optionally.
-/Config/Signing.local.xcconfig
+/iOS/Config/Signing.local.xcconfig
 
 ## Obj-C/Swift specific
 *.hmap
